@@ -1,0 +1,1044 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "formato": {
+      "type": "string",
+      "const": "kine-plataforma"
+    },
+    "versionEsquema": {
+      "type": "number",
+      "description": "Versión del modelo de datos"
+    },
+    "exportadoEn": {
+      "type": "string",
+      "description": "Marca de tiempo ISO 8601"
+    },
+    "centros": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "const": "centro"
+          },
+          "id": {
+            "type": "string",
+            "description": "Identificador único (UUID)"
+          },
+          "creadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de creación"
+          },
+          "actualizadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de la última modificación"
+          },
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nombre del centro, clínica o lugar de atención (ej: \"Domicilio\", \"Clínica X\")"
+          },
+          "direccion": {
+            "default": "",
+            "description": "Dirección del centro",
+            "type": "string"
+          },
+          "color": {
+            "default": "#0f766e",
+            "description": "Color de la etiqueta del centro en la interfaz (hex)",
+            "type": "string"
+          },
+          "notas": {
+            "default": "",
+            "description": "Notas libres sobre el centro",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tipo",
+          "id",
+          "creadoEn",
+          "actualizadoEn",
+          "nombre"
+        ],
+        "description": "Centro o lugar donde se atienden pacientes. Un paciente pertenece a un centro."
+      }
+    },
+    "pacientes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "const": "paciente"
+          },
+          "id": {
+            "type": "string",
+            "description": "Identificador único (UUID)"
+          },
+          "creadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de creación"
+          },
+          "actualizadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de la última modificación"
+          },
+          "centroId": {
+            "default": null,
+            "description": "Id del Centro donde se atiende (null = sin centro)",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "etiquetas": {
+            "default": [],
+            "description": "Etiquetas libres para filtrar (ej: \"rodilla\", \"deportista\", \"post-operatorio\", \"fonasa\")",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "estado": {
+            "default": "activo",
+            "description": "Estado del tratamiento: activo, en_pausa o alta",
+            "type": "string",
+            "enum": [
+              "activo",
+              "en_pausa",
+              "alta"
+            ]
+          },
+          "identificacion": {
+            "type": "object",
+            "properties": {
+              "nombre": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Nombre completo"
+              },
+              "rut": {
+                "default": "",
+                "description": "RUT u otro documento de identidad",
+                "type": "string"
+              },
+              "fechaNacimiento": {
+                "default": "",
+                "description": "Fecha de nacimiento YYYY-MM-DD (la edad se calcula a partir de ella)",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                    "description": "Fecha clínica en formato ISO YYYY-MM-DD"
+                  },
+                  {
+                    "type": "string",
+                    "const": ""
+                  }
+                ]
+              },
+              "sexo": {
+                "default": "",
+                "description": "Sexo: femenino, masculino u otro",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "femenino",
+                      "masculino",
+                      "otro"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "const": ""
+                  }
+                ]
+              },
+              "ocupacion": {
+                "default": "",
+                "description": "Ocupación o actividad principal",
+                "type": "string"
+              },
+              "telefono": {
+                "default": "",
+                "description": "Teléfono de contacto",
+                "type": "string"
+              },
+              "email": {
+                "default": "",
+                "description": "Correo electrónico",
+                "type": "string"
+              }
+            },
+            "required": [
+              "nombre"
+            ],
+            "description": "Datos de identificación del paciente"
+          },
+          "notas": {
+            "default": "",
+            "description": "Notas generales del paciente (no clínicas: preferencias, horarios, etc.)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tipo",
+          "id",
+          "creadoEn",
+          "actualizadoEn",
+          "identificacion"
+        ],
+        "description": "Paciente. Los datos clínicos están en Ingreso, Evaluacion y Sesion, enlazados por pacienteId."
+      }
+    },
+    "ingresos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "const": "ingreso"
+          },
+          "id": {
+            "type": "string",
+            "description": "Identificador único (UUID)"
+          },
+          "creadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de creación"
+          },
+          "actualizadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de la última modificación"
+          },
+          "pacienteId": {
+            "type": "string",
+            "description": "Id del Paciente"
+          },
+          "fecha": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Fecha clínica en formato ISO YYYY-MM-DD"
+          },
+          "anamnesisProxima": {
+            "default": {},
+            "type": "object",
+            "properties": {
+              "diagnosticoMedico": {
+                "default": "",
+                "description": "Diagnóstico médico de derivación",
+                "type": "string"
+              },
+              "tiempoEvolucion": {
+                "default": "",
+                "description": "Tiempo de evolución del cuadro (ej: \"3 semanas\")",
+                "type": "string"
+              },
+              "medicoTratante": {
+                "default": "",
+                "description": "Médico tratante / derivador",
+                "type": "string"
+              },
+              "prevision": {
+                "default": "",
+                "description": "Previsión de salud (ej: Fonasa, Isapre, particular)",
+                "type": "string"
+              },
+              "motivoConsulta": {
+                "default": "",
+                "description": "Motivo de consulta y cuadro clínico actual, en palabras del paciente",
+                "type": "string"
+              },
+              "episodiosPrevios": {
+                "default": "",
+                "description": "Episodios previos similares",
+                "type": "string"
+              },
+              "tratamientosPrevios": {
+                "default": "",
+                "description": "Tratamientos o procedimientos previos",
+                "type": "string"
+              },
+              "examenesComplementarios": {
+                "default": "",
+                "description": "Exámenes complementarios / imágenes y sus hallazgos",
+                "type": "string"
+              },
+              "objetivosPaciente": {
+                "default": "",
+                "description": "Objetivos y expectativas del paciente",
+                "type": "string"
+              }
+            },
+            "description": "Anamnesis próxima: el problema actual"
+          },
+          "anamnesisRemota": {
+            "default": {},
+            "type": "object",
+            "properties": {
+              "lateralidad": {
+                "default": "",
+                "description": "Lateralidad / dominancia",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "diestro",
+                      "zurdo",
+                      "ambidiestro"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "const": ""
+                  }
+                ]
+              },
+              "pesoKg": {
+                "default": null,
+                "description": "Peso en kilogramos",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tallaCm": {
+                "default": null,
+                "description": "Talla en centímetros",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "imc": {
+                "default": null,
+                "description": "Índice de masa corporal (kg/m²), calculado desde peso y talla",
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "antecedentesMedicos": {
+                "default": "",
+                "description": "Antecedentes médicos / mórbidos",
+                "type": "string"
+              },
+              "antecedentesQuirurgicos": {
+                "default": "",
+                "description": "Antecedentes quirúrgicos",
+                "type": "string"
+              },
+              "antecedentesFamiliares": {
+                "default": "",
+                "description": "Antecedentes familiares",
+                "type": "string"
+              },
+              "antecedentesGinecoobstetricos": {
+                "default": "",
+                "description": "Antecedentes ginecoobstétricos",
+                "type": "string"
+              },
+              "medicamentos": {
+                "default": "",
+                "description": "Medicamentos en uso",
+                "type": "string"
+              },
+              "alimentacion": {
+                "default": "",
+                "description": "Alimentación",
+                "type": "string"
+              },
+              "suplementos": {
+                "default": "",
+                "description": "Suplementos",
+                "type": "string"
+              },
+              "habitos": {
+                "description": "Hábitos: OH, TBQ, drogas",
+                "default": {},
+                "type": "object",
+                "properties": {
+                  "alcohol": {
+                    "default": false,
+                    "description": "Consume alcohol (OH)",
+                    "type": "boolean"
+                  },
+                  "tabaco": {
+                    "default": false,
+                    "description": "Consume tabaco (TBQ)",
+                    "type": "boolean"
+                  },
+                  "drogas": {
+                    "default": false,
+                    "description": "Consume drogas",
+                    "type": "boolean"
+                  },
+                  "detalle": {
+                    "default": "",
+                    "description": "Detalle de cantidad / frecuencia",
+                    "type": "string"
+                  }
+                }
+              },
+              "actividadFisica": {
+                "default": "",
+                "description": "Actividad física: tipo, frecuencia, intensidad",
+                "type": "string"
+              },
+              "sueno": {
+                "default": "",
+                "description": "Calidad y cantidad de sueño",
+                "type": "string"
+              },
+              "psicologia": {
+                "default": "",
+                "description": "Aspectos psicológicos / emocionales relevantes",
+                "type": "string"
+              },
+              "redDeApoyo": {
+                "default": "",
+                "description": "Red de apoyo",
+                "type": "string"
+              },
+              "vivienda": {
+                "default": "",
+                "description": "Vivienda (escaleras, accesibilidad, etc.)",
+                "type": "string"
+              },
+              "transporte": {
+                "default": "",
+                "description": "Medio de transporte habitual",
+                "type": "string"
+              },
+              "abvdAvd": {
+                "default": "",
+                "description": "ABVD/AVD: actividades básicas e instrumentales de la vida diaria",
+                "type": "string"
+              },
+              "hobbies": {
+                "default": "",
+                "description": "Hobbies y actividades",
+                "type": "string"
+              },
+              "rutinaDiaria": {
+                "default": "",
+                "description": "Rutina diaria",
+                "type": "string"
+              },
+              "antecedenteCaidas": {
+                "default": "",
+                "description": "Antecedente de caídas",
+                "type": "string"
+              },
+              "ayudasTecnicas": {
+                "default": "",
+                "description": "Ayudas técnicas (bastón, órtesis, etc.)",
+                "type": "string"
+              }
+            },
+            "description": "Anamnesis remota: antecedentes y contexto biopsicosocial"
+          }
+        },
+        "required": [
+          "tipo",
+          "id",
+          "creadoEn",
+          "actualizadoEn",
+          "pacienteId",
+          "fecha"
+        ],
+        "description": "Ingreso del paciente con anamnesis próxima y remota. Normalmente uno por episodio de tratamiento."
+      }
+    },
+    "evaluaciones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "const": "evaluacion"
+          },
+          "id": {
+            "type": "string",
+            "description": "Identificador único (UUID)"
+          },
+          "creadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de creación"
+          },
+          "actualizadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de la última modificación"
+          },
+          "pacienteId": {
+            "type": "string",
+            "description": "Id del Paciente"
+          },
+          "fecha": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Fecha clínica en formato ISO YYYY-MM-DD"
+          },
+          "clase": {
+            "default": "inicial",
+            "description": "Evaluación inicial o reevaluación",
+            "type": "string",
+            "enum": [
+              "inicial",
+              "reevaluacion"
+            ]
+          },
+          "dolor": {
+            "default": {},
+            "type": "object",
+            "properties": {
+              "alicia": {
+                "description": "Caracterización del dolor según nemotecnia ALICIA",
+                "default": {},
+                "type": "object",
+                "properties": {
+                  "aparicion": {
+                    "default": "",
+                    "description": "A — Aparición: cuándo y cómo comenzó",
+                    "type": "string"
+                  },
+                  "localizacion": {
+                    "default": "",
+                    "description": "L — Localización",
+                    "type": "string"
+                  },
+                  "intensidadEva": {
+                    "default": null,
+                    "description": "Escala Visual Análoga del dolor, 0 (sin dolor) a 10 (máximo). null = no registrado",
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "caracter": {
+                    "default": "",
+                    "description": "C — Carácter: punzante, quemante, sordo, etc.",
+                    "type": "string"
+                  },
+                  "irradiacion": {
+                    "default": "",
+                    "description": "I — Irradiación",
+                    "type": "string"
+                  },
+                  "atenuantesAgravantes": {
+                    "default": "",
+                    "description": "A — Agravantes y atenuantes",
+                    "type": "string"
+                  }
+                }
+              },
+              "mapa": {
+                "default": [],
+                "description": "Marcas en el mapa corporal del dolor",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "vista": {
+                      "type": "string",
+                      "enum": [
+                        "anterior",
+                        "posterior",
+                        "lateral_derecha",
+                        "lateral_izquierda"
+                      ],
+                      "description": "Vista del mapa corporal donde se marcó"
+                    },
+                    "x": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Posición horizontal normalizada (0 = borde izquierdo de la imagen, 1 = derecho)"
+                    },
+                    "y": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Posición vertical normalizada (0 = cabeza, 1 = pies)"
+                    },
+                    "region": {
+                      "default": "",
+                      "description": "Región anatómica aproximada (ej: \"hombro\", \"zona lumbar\", \"rodilla\")",
+                      "type": "string"
+                    },
+                    "lado": {
+                      "default": "",
+                      "description": "Lado del cuerpo del PACIENTE",
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "derecho",
+                            "izquierdo",
+                            "bilateral",
+                            "central"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "const": ""
+                        }
+                      ]
+                    },
+                    "sintoma": {
+                      "default": "dolor",
+                      "description": "Tipo de síntoma marcado",
+                      "type": "string",
+                      "enum": [
+                        "dolor",
+                        "dolor_irradiado",
+                        "parestesia",
+                        "rigidez",
+                        "debilidad",
+                        "otro"
+                      ]
+                    },
+                    "intensidad": {
+                      "default": null,
+                      "description": "Escala Visual Análoga del dolor, 0 (sin dolor) a 10 (máximo). null = no registrado",
+                      "anyOf": [
+                        {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 10
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "nota": {
+                      "default": "",
+                      "description": "Descripción libre de la marca",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "vista",
+                    "x",
+                    "y"
+                  ],
+                  "description": "Una marca en el mapa del dolor"
+                }
+              }
+            }
+          },
+          "postural": {
+            "default": "",
+            "description": "Evaluación postural",
+            "type": "string"
+          },
+          "observacion": {
+            "default": "",
+            "description": "Observación / inspección",
+            "type": "string"
+          },
+          "movimiento": {
+            "description": "Evaluación de movimiento",
+            "default": {},
+            "type": "object",
+            "properties": {
+              "activo": {
+                "default": "",
+                "description": "Rango de movimiento activo",
+                "type": "string"
+              },
+              "pasivo": {
+                "default": "",
+                "description": "Rango de movimiento pasivo",
+                "type": "string"
+              },
+              "artrocinematica": {
+                "default": "",
+                "description": "Evaluación artrocinemática",
+                "type": "string"
+              }
+            }
+          },
+          "tejidosBlandos": {
+            "description": "Evaluación de tejidos blandos",
+            "default": {},
+            "type": "object",
+            "properties": {
+              "activacionMuscular": {
+                "default": "",
+                "description": "Activación muscular",
+                "type": "string"
+              },
+              "fuerzaMuscular": {
+                "default": "",
+                "description": "Fuerza muscular (ej: escala Daniels 0–5, dinamometría)",
+                "type": "string"
+              },
+              "longitudMuscular": {
+                "default": "",
+                "description": "Longitud muscular / flexibilidad",
+                "type": "string"
+              }
+            }
+          },
+          "neurologica": {
+            "description": "Evaluación neurológica",
+            "default": {},
+            "type": "object",
+            "properties": {
+              "dermatomas": {
+                "default": "",
+                "description": "Dermatomas",
+                "type": "string"
+              },
+              "miotomas": {
+                "default": "",
+                "description": "Miotomas",
+                "type": "string"
+              },
+              "reflejos": {
+                "default": "",
+                "description": "Reflejos osteotendíneos",
+                "type": "string"
+              },
+              "neurodinamia": {
+                "default": "",
+                "description": "Pruebas neurodinámicas",
+                "type": "string"
+              }
+            }
+          },
+          "controlSensoriomotor": {
+            "default": "",
+            "description": "Evaluación de control sensoriomotor",
+            "type": "string"
+          },
+          "palpacion": {
+            "default": "",
+            "description": "Palpación específica",
+            "type": "string"
+          },
+          "funcional": {
+            "default": "",
+            "description": "Evaluación funcional (tests, cuestionarios, gestos)",
+            "type": "string"
+          },
+          "pruebasEspeciales": {
+            "default": [],
+            "description": "Pruebas especiales realizadas",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "nombre": {
+                  "type": "string",
+                  "description": "Nombre de la prueba (ej: \"Lachman\", \"Neer\", \"SLR\")"
+                },
+                "lado": {
+                  "default": "",
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "derecho",
+                        "izquierdo",
+                        "bilateral",
+                        "central"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "const": ""
+                    }
+                  ]
+                },
+                "resultado": {
+                  "default": "",
+                  "description": "Resultado de la prueba",
+                  "type": "string",
+                  "enum": [
+                    "positivo",
+                    "negativo",
+                    "no_concluyente",
+                    ""
+                  ]
+                },
+                "notas": {
+                  "default": "",
+                  "description": "Hallazgos u observaciones",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "nombre"
+              ],
+              "description": "Prueba especial / test ortopédico"
+            }
+          },
+          "conclusion": {
+            "description": "Síntesis de la evaluación y plan",
+            "default": {},
+            "type": "object",
+            "properties": {
+              "diagnosticoKinesiologico": {
+                "default": "",
+                "description": "Diagnóstico kinesiológico / funcional",
+                "type": "string"
+              },
+              "objetivosGenerales": {
+                "default": "",
+                "description": "Objetivo(s) general(es) del tratamiento",
+                "type": "string"
+              },
+              "objetivosEspecificos": {
+                "default": "",
+                "description": "Objetivos específicos, idealmente medibles",
+                "type": "string"
+              },
+              "planTratamiento": {
+                "default": "",
+                "description": "Plan de tratamiento: fases, frecuencia, número estimado de sesiones",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "tipo",
+          "id",
+          "creadoEn",
+          "actualizadoEn",
+          "pacienteId",
+          "fecha"
+        ],
+        "description": "Evaluación kinesiológica (inicial o reevaluación) con mapa del dolor"
+      }
+    },
+    "sesiones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "const": "sesion"
+          },
+          "id": {
+            "type": "string",
+            "description": "Identificador único (UUID)"
+          },
+          "creadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de creación"
+          },
+          "actualizadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de la última modificación"
+          },
+          "pacienteId": {
+            "type": "string",
+            "description": "Id del Paciente"
+          },
+          "fecha": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Fecha clínica en formato ISO YYYY-MM-DD"
+          },
+          "hora": {
+            "default": "",
+            "description": "Hora de la sesión HH:MM",
+            "type": "string"
+          },
+          "numero": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Número correlativo de sesión del paciente"
+          },
+          "estado": {
+            "default": "planificada",
+            "description": "Estado de la sesión",
+            "type": "string",
+            "enum": [
+              "planificada",
+              "realizada",
+              "cancelada",
+              "no_asistio"
+            ]
+          },
+          "planificacion": {
+            "description": "Lo que se planificó hacer",
+            "default": {},
+            "type": "object",
+            "properties": {
+              "objetivos": {
+                "default": "",
+                "description": "Objetivos de esta sesión",
+                "type": "string"
+              },
+              "ejercicios": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "nombre": {
+                      "default": "",
+                      "description": "Ejercicio o intervención (ej: \"Sentadilla búlgara\", \"Movilización grado III\")",
+                      "type": "string"
+                    },
+                    "series": {
+                      "default": "",
+                      "description": "Series",
+                      "type": "string"
+                    },
+                    "repeticiones": {
+                      "default": "",
+                      "description": "Repeticiones o tiempo",
+                      "type": "string"
+                    },
+                    "carga": {
+                      "default": "",
+                      "description": "Carga / intensidad (kg, RPE, banda, etc.)",
+                      "type": "string"
+                    },
+                    "notas": {
+                      "default": "",
+                      "description": "Indicaciones o progresión",
+                      "type": "string"
+                    },
+                    "realizado": {
+                      "default": false,
+                      "description": "Si se realizó en la sesión",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ],
+                  "description": "Ejercicio o intervención planificada para la sesión"
+                }
+              },
+              "notas": {
+                "default": "",
+                "description": "Notas de planificación",
+                "type": "string"
+              }
+            }
+          },
+          "registro": {
+            "description": "Evolución de la sesión en formato SOAP",
+            "default": {},
+            "type": "object",
+            "properties": {
+              "evaPre": {
+                "default": null,
+                "description": "EVA al inicio de la sesión (0–10)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 10
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "evaPost": {
+                "default": null,
+                "description": "EVA al final de la sesión (0–10)",
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 10
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "subjetivo": {
+                "default": "",
+                "description": "S — Subjetivo: cómo llega el paciente, lo que reporta",
+                "type": "string"
+              },
+              "objetivo": {
+                "default": "",
+                "description": "O — Objetivo: hallazgos y lo realizado en la sesión",
+                "type": "string"
+              },
+              "analisis": {
+                "default": "",
+                "description": "A — Análisis: respuesta al tratamiento, interpretación",
+                "type": "string"
+              },
+              "plan": {
+                "default": "",
+                "description": "P — Plan: indicaciones, tareas para la casa, próximos pasos",
+                "type": "string"
+              }
+            }
+          }
+        },
+        "required": [
+          "tipo",
+          "id",
+          "creadoEn",
+          "actualizadoEn",
+          "pacienteId",
+          "fecha",
+          "numero"
+        ],
+        "description": "Sesión de tratamiento: planificación + registro de evolución (SOAP)"
+      }
+    }
+  },
+  "required": [
+    "formato",
+    "versionEsquema",
+    "exportadoEn",
+    "centros",
+    "pacientes",
+    "ingresos",
+    "evaluaciones",
+    "sesiones"
+  ],
+  "description": "Respaldo completo de la plataforma kinesiológica"
+}
