@@ -44,6 +44,7 @@ function baseEjemplo() {
     ingresos: [ingreso],
     evaluaciones: [ev],
     sesiones: [s3, s1, s2],
+    adjuntos: [],
   };
   return { db, centro, ana, beto };
 }

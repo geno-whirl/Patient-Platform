@@ -288,6 +288,31 @@ export const SesionSchema = z
   })
   .describe('Sesión de tratamiento: planificación + registro de evolución (SOAP)');
 
+// ───────────────────────── Adjunto ─────────────────────────
+
+export const CATEGORIAS_ADJUNTO = ['imagen', 'examen', 'informe', 'consentimiento', 'video', 'otro'] as const;
+
+export const AdjuntoSchema = z
+  .object({
+    tipo: z.literal('adjunto'),
+    ...meta,
+    pacienteId: z.string().describe('Id del Paciente'),
+    fecha,
+    categoria: z
+      .enum(CATEGORIAS_ADJUNTO)
+      .default('otro')
+      .describe('imagen (foto clínica), examen (imagenología, laboratorio), informe, consentimiento, video u otro'),
+    descripcion: texto(
+      'Descripción y hallazgos en texto (ej: "RM rodilla D: rotura LCA completa, edema óseo"). Es lo que un LLM puede leer del archivo.',
+    ),
+    nombreArchivo: z.string().describe('Nombre original del archivo'),
+    tipoMime: z.string().describe('Tipo MIME (ej: image/jpeg, application/pdf)'),
+    tamanoBytes: z.number().int().nonnegative().describe('Tamaño en bytes'),
+    ruta: z.string().describe('Clave del archivo en el almacenamiento (Supabase Storage o navegador)'),
+    evaluacionId: z.string().nullable().default(null).describe('Id de la Evaluacion relacionada, si corresponde'),
+  })
+  .describe('Archivo adjunto a la ficha (foto, examen, informe). El contenido binario se guarda aparte.');
+
 // ───────────────────────── Tipos y colecciones ─────────────────────────
 
 export type Centro = z.infer<typeof CentroSchema>;
@@ -295,6 +320,7 @@ export type Paciente = z.infer<typeof PacienteSchema>;
 export type Ingreso = z.infer<typeof IngresoSchema>;
 export type Evaluacion = z.infer<typeof EvaluacionSchema>;
 export type Sesion = z.infer<typeof SesionSchema>;
+export type Adjunto = z.infer<typeof AdjuntoSchema>;
 export type MarcaDolor = z.infer<typeof MarcaDolorSchema>;
 export type PruebaEspecial = z.infer<typeof PruebaEspecialSchema>;
 export type Ejercicio = z.infer<typeof EjercicioSchema>;
@@ -306,6 +332,7 @@ export const COLECCIONES = {
   ingresos: IngresoSchema,
   evaluaciones: EvaluacionSchema,
   sesiones: SesionSchema,
+  adjuntos: AdjuntoSchema,
 } as const;
 
 export type Coleccion = keyof typeof COLECCIONES;
@@ -316,6 +343,7 @@ export interface RegistroPorColeccion {
   ingresos: Ingreso;
   evaluaciones: Evaluacion;
   sesiones: Sesion;
+  adjuntos: Adjunto;
 }
 
 export type BaseDeDatos = { [K in Coleccion]: RegistroPorColeccion[K][] };
@@ -331,6 +359,7 @@ export const ExportacionSchema = z
     ingresos: z.array(IngresoSchema),
     evaluaciones: z.array(EvaluacionSchema),
     sesiones: z.array(SesionSchema),
+    adjuntos: z.array(AdjuntoSchema).default([]).describe('Metadatos de adjuntos (los archivos no van en el respaldo JSON)'),
   })
   .describe('Respaldo completo de la plataforma kinesiológica');
 

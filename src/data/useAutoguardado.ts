@@ -53,5 +53,11 @@ export function useAutoguardado<C extends Coleccion>(coleccion: C, inicial: Regi
     [actualizar],
   );
 
-  return { borrador, actualizar, fijar, estado, mensajeError, guardarAhora: volcar };
+  /** Cancela cambios pendientes (p. ej. antes de eliminar el registro, para no recrearlo). */
+  const descartar = useCallback(() => {
+    clearTimeout(temporizador.current);
+    pendiente.current = null;
+  }, []);
+
+  return { borrador, actualizar, fijar, estado, mensajeError, guardarAhora: volcar, descartar };
 }

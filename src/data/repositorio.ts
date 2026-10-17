@@ -10,6 +10,11 @@ export interface Repositorio {
   guardar<C extends Coleccion>(coleccion: C, registro: RegistroPorColeccion[C]): Promise<void>;
   guardarVarios<C extends Coleccion>(coleccion: C, registros: RegistroPorColeccion[C][]): Promise<void>;
   eliminar(coleccion: Coleccion, ids: string[]): Promise<void>;
+
+  /** Guarda un archivo binario y devuelve la ruta con que quedó almacenado. */
+  subirArchivo(clave: string, archivo: Blob): Promise<string>;
+  leerArchivo(ruta: string): Promise<Blob>;
+  eliminarArchivos(rutas: string[]): Promise<void>;
 }
 
 export const baseVacia = (): BaseDeDatos => ({
@@ -18,4 +23,5 @@ export const baseVacia = (): BaseDeDatos => ({
   ingresos: [],
   evaluaciones: [],
   sesiones: [],
+  adjuntos: [],
 });

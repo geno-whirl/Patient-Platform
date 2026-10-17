@@ -1,5 +1,5 @@
--- Esquema de base de datos para Supabase (Postgres).
--- Ejecutar una vez en: Supabase → SQL Editor → New query → pegar → Run.
+-- Esquema inicial (migración de Supabase). Se aplica con `npx supabase db push`
+-- (o pegándolo en Supabase → SQL Editor si no usas la CLI).
 --
 -- Diseño: cada colección es una tabla con el documento completo en `data` (jsonb),
 -- validado en la app con los esquemas de src/domain/schema.ts. Algunas claves se

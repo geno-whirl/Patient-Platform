@@ -32,7 +32,7 @@ export function EvaluacionPage() {
 function FormEvaluacion({ evaluacion }: { evaluacion: Evaluacion }) {
   const { eliminar } = useDatos();
   const navegar = useNavigate();
-  const { borrador, fijar, estado, mensajeError } = useAutoguardado('evaluaciones', evaluacion);
+  const { borrador, fijar, estado, mensajeError, descartar } = useAutoguardado('evaluaciones', evaluacion);
   const t = enlazarTexto(borrador, fijar);
   const pruebas = borrador.pruebasEspeciales;
   const fijarPrueba = (pid: string, cambios: Partial<PruebaEspecial>) =>
@@ -45,6 +45,7 @@ function FormEvaluacion({ evaluacion }: { evaluacion: Evaluacion }) {
         estado={estado}
         error={mensajeError}
         onEliminar={async () => {
+          descartar();
           await eliminar('evaluaciones', evaluacion.id);
           navegar('..', { relative: 'path' });
         }}

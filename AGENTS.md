@@ -8,11 +8,14 @@ o que modifica su código.
 Hay tres formatos con la misma información:
 
 1. **Markdown por paciente** (export “Datos e IA” o “Copiar ficha para IA”): una sección `# Paciente: …`
-   seguida de Ingreso, Evaluaciones y Sesiones en orden cronológico. Los campos vacíos se omiten,
+   seguida de Ingreso, Evaluaciones, Sesiones y Adjuntos en orden cronológico. Los campos vacíos se omiten,
    así que si un dato no aparece significa “no registrado”, no “normal”.
-2. **JSON de respaldo**: objeto `{ formato, versionEsquema, exportadoEn, centros[], pacientes[], ingresos[], evaluaciones[], sesiones[] }`.
+   Si el título es un código como `P-3F2A9C`, la ficha está **anonimizada**: ese código reemplaza al nombre
+   del paciente en todo el texto, y `[RUT]`, `[email]` y `[teléfono]` marcan datos que se quitaron.
+2. **JSON de respaldo** (descarga manual o carpeta “Kine — respaldos” en Google Drive): objeto
+   `{ formato, versionEsquema, exportadoEn, centros[], pacientes[], ingresos[], evaluaciones[], sesiones[], adjuntos[] }`.
    El esquema completo, con descripciones, está en `docs/esquema.json`.
-3. **SQL (Supabase)**: tablas `centros`, `pacientes`, `ingresos`, `evaluaciones` y `sesiones`, cada una con `data jsonb`
+3. **SQL (Supabase)**: tablas `centros`, `pacientes`, `ingresos`, `evaluaciones`, `sesiones` y `adjuntos`, cada una con `data jsonb`
    (el mismo documento del JSON) y columnas de conveniencia (`nombre`, `centro_id`, `paciente_id`, `fecha`, `estado` y `etiquetas`).
    Además hay vistas `v_pacientes` (resumen de seguimiento) y `v_evolucion_eva` (EVA de inicio y término por sesión realizada).
 
@@ -26,6 +29,9 @@ Hay tres formatos con la misma información:
 - **Sesión** = `planificacion` (objetivos y ejercicios) + `registro` en formato SOAP (`subjetivo`, `objetivo`, `analisis`, `plan`) con `evaPre` y `evaPost`.
   `estado`: `planificada` | `realizada` | `cancelada` | `no_asistio`. Solo las sesiones realizadas cuentan como evolución.
 - `paciente.estado`: `activo` | `en_pausa` | `alta`. `etiquetas[]` son palabras en minúscula con guiones.
+- **Adjunto**: metadatos de un archivo (foto, examen, informe). El contenido binario no está en el JSON;
+  lo que se puede leer es `descripcion` (hallazgos escritos por el kinesiólogo), `categoria` y `fecha`.
+  `evaluacionId` lo vincula opcionalmente a una evaluación.
 
 ## Ejemplos de consultas SQL
 
@@ -46,6 +52,9 @@ select nombre from pacientes where etiquetas ? 'lumbar';
 
 ## Al modificar el código
 
-- La fuente de verdad del modelo es `src/domain/schema.ts`. Agrega campos con `.default(...)` para que los registros antiguos sigan siendo válidos, describe cada campo con `.describe()`, ejecuta `npm run schema` y actualiza `domain/markdown.ts`.
-- Si agregas una columna generada en SQL, añádela también a `supabase/schema.sql` de forma idempotente.
+- La fuente de verdad del modelo es `src/domain/schema.ts`. Agrega campos con `.default(...)` para que los registros antiguos sigan siendo válidos, describe cada campo con `.describe()`, ejecuta `npm run schema` y actualiza `domain/ficha.ts` (Markdown e impresión) y, si el campo identifica al paciente, `domain/anonimizar.ts`.
+- Los cambios de base de datos van en una **nueva** migración en `supabase/migrations/` (no edites las ya aplicadas).
+  Pruébalas con `npx supabase db reset` en el Supabase local.
+- La ficha (Markdown y vista de impresión) se arma en `src/domain/ficha.ts`; la anonimización está en `src/domain/anonimizar.ts`.
+- Las Edge Functions (`supabase/functions/`) no usan dependencias externas: llaman a las APIs REST de Supabase y Google con `fetch`.
 - Ejecuta `npm test` y `npm run typecheck` antes de hacer commit.

@@ -17,7 +17,7 @@ export function IngresoPage() {
 function FormIngreso({ ingreso }: { ingreso: Ingreso }) {
   const { eliminar } = useDatos();
   const navegar = useNavigate();
-  const { borrador, fijar, actualizar, estado, mensajeError } = useAutoguardado('ingresos', ingreso);
+  const { borrador, fijar, actualizar, estado, mensajeError, descartar } = useAutoguardado('ingresos', ingreso);
   const t = enlazarTexto(borrador, fijar);
   const r = borrador.anamnesisRemota;
 
@@ -34,6 +34,7 @@ function FormIngreso({ ingreso }: { ingreso: Ingreso }) {
         estado={estado}
         error={mensajeError}
         onEliminar={async () => {
+          descartar();
           await eliminar('ingresos', ingreso.id);
           navegar('..', { relative: 'path' });
         }}

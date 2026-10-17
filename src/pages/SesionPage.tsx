@@ -19,7 +19,7 @@ export function SesionPage() {
 function FormSesion({ sesion }: { sesion: Sesion }) {
   const { db, eliminar } = useDatos();
   const navegar = useNavigate();
-  const { borrador, fijar, estado, mensajeError } = useAutoguardado('sesiones', sesion);
+  const { borrador, fijar, estado, mensajeError, descartar } = useAutoguardado('sesiones', sesion);
   const t = enlazarTexto(borrador, fijar);
   const ejercicios = borrador.planificacion.ejercicios;
   const fijarEjercicios = (e: Ejercicio[]) => fijar('planificacion.ejercicios', e);
@@ -45,6 +45,7 @@ function FormSesion({ sesion }: { sesion: Sesion }) {
         estado={estado}
         error={mensajeError}
         onEliminar={async () => {
+          descartar();
           await eliminar('sesiones', sesion.id);
           navegar('..', { relative: 'path' });
         }}

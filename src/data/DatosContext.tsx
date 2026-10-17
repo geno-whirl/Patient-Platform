@@ -1,8 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ahoraIso } from '../domain/factories';
+import { nombreArchivo } from '../domain/archivos';
+import { ahoraIso, hoy, nuevoId } from '../domain/factories';
+import { prepararArchivo } from '../domain/imagenes';
 import {
   COLECCIONES,
   SCHEMA_VERSION,
+  type Adjunto,
   type BaseDeDatos,
   type Coleccion,
   type Exportacion,
@@ -18,6 +21,8 @@ interface Datos {
   guardar<C extends Coleccion>(c: C, r: RegistroPorColeccion[C]): Promise<RegistroPorColeccion[C]>;
   eliminar(c: Coleccion, id: string): Promise<void>;
   eliminarPaciente(id: string): Promise<void>;
+  subirAdjunto(pacienteId: string, archivo: File, datos?: Partial<Adjunto>): Promise<Adjunto>;
+  leerArchivo(ruta: string): Promise<Blob>;
   exportar(): Exportacion;
   importar(datos: unknown): Promise<{ total: number }>;
 }
@@ -60,15 +65,20 @@ export function DatosProvider({ repositorio, children }: { repositorio: Reposito
 
   const eliminar = useCallback(
     async (c: Coleccion, id: string) => {
+      if (c === 'adjuntos') {
+        const a = db.adjuntos.find((x) => x.id === id);
+        if (a) await repositorio.eliminarArchivos([a.ruta]);
+      }
       await repositorio.eliminar(c, [id]);
       setDb((prev) => ({ ...prev, [c]: (prev[c] as { id: string }[]).filter((x) => x.id !== id) }));
     },
-    [repositorio],
+    [db.adjuntos, repositorio],
   );
 
   const eliminarPaciente = useCallback(
     async (id: string) => {
-      const hijos = ['ingresos', 'evaluaciones', 'sesiones'] as const;
+      await repositorio.eliminarArchivos(db.adjuntos.filter((a) => a.pacienteId === id).map((a) => a.ruta));
+      const hijos = ['ingresos', 'evaluaciones', 'sesiones', 'adjuntos'] as const;
       for (const c of hijos) {
         const ids = db[c].filter((x) => x.pacienteId === id).map((x) => x.id);
         await repositorio.eliminar(c, ids);
@@ -80,10 +90,46 @@ export function DatosProvider({ repositorio, children }: { repositorio: Reposito
         ingresos: prev.ingresos.filter((x) => x.pacienteId !== id),
         evaluaciones: prev.evaluaciones.filter((x) => x.pacienteId !== id),
         sesiones: prev.sesiones.filter((x) => x.pacienteId !== id),
+        adjuntos: prev.adjuntos.filter((x) => x.pacienteId !== id),
       }));
     },
     [db, repositorio],
   );
+
+  const subirAdjunto = useCallback(
+    async (pacienteId: string, original: File, datos: Partial<Adjunto> = {}) => {
+      const archivo = await prepararArchivo(original);
+      const id = nuevoId();
+      const extension = archivo.name.includes('.') ? archivo.name.slice(archivo.name.lastIndexOf('.')) : '';
+      const base = nombreArchivo(archivo.name.replace(/\.[^.]+$/, '')) || 'archivo';
+      const ruta = await repositorio.subirArchivo(`${pacienteId}/${id}-${base}${extension.toLowerCase()}`, archivo);
+      const t = ahoraIso();
+      try {
+        return await guardar('adjuntos', {
+          tipo: 'adjunto',
+          id,
+          creadoEn: t,
+          actualizadoEn: t,
+          pacienteId,
+          fecha: hoy(),
+          categoria: archivo.type.startsWith('image/') ? 'imagen' : archivo.type.startsWith('video/') ? 'video' : 'examen',
+          descripcion: '',
+          nombreArchivo: original.name,
+          tipoMime: archivo.type || 'application/octet-stream',
+          tamanoBytes: archivo.size,
+          ruta,
+          evaluacionId: null,
+          ...datos,
+        });
+      } catch (e) {
+        await repositorio.eliminarArchivos([ruta]).catch(() => undefined);
+        throw e;
+      }
+    },
+    [guardar, repositorio],
+  );
+
+  const leerArchivo = useCallback((ruta: string) => repositorio.leerArchivo(ruta), [repositorio]);
 
   const exportar = useCallback(
     (): Exportacion => ({
@@ -115,8 +161,20 @@ export function DatosProvider({ repositorio, children }: { repositorio: Reposito
   );
 
   const valor = useMemo<Datos>(
-    () => ({ db, cargando, error, modo: repositorio.nombre, guardar, eliminar, eliminarPaciente, exportar, importar }),
-    [db, cargando, error, repositorio.nombre, guardar, eliminar, eliminarPaciente, exportar, importar],
+    () => ({
+      db,
+      cargando,
+      error,
+      modo: repositorio.nombre,
+      guardar,
+      eliminar,
+      eliminarPaciente,
+      subirAdjunto,
+      leerArchivo,
+      exportar,
+      importar,
+    }),
+    [db, cargando, error, repositorio.nombre, guardar, eliminar, eliminarPaciente, subirAdjunto, leerArchivo, exportar, importar],
   );
 
   return <DatosCtx.Provider value={valor}>{children}</DatosCtx.Provider>;

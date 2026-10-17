@@ -6,10 +6,12 @@ import { DatosProvider } from './data/DatosContext';
 import { RepositorioLocal } from './data/repositorioLocal';
 import { RepositorioSupabase } from './data/repositorioSupabase';
 import { supabase } from './data/supabase';
+import { ListaAdjuntos } from './pages/AdjuntosPage';
 import { AgendaPage } from './pages/AgendaPage';
 import { CentrosPage } from './pages/CentrosPage';
 import { DatosPage } from './pages/DatosPage';
 import { EvaluacionPage } from './pages/EvaluacionPage';
+import { ImprimirPage } from './pages/ImprimirPage';
 import { IngresoPage } from './pages/IngresoPage';
 import { DatosPacientePage, ListaEvaluaciones, ListaIngresos, ListaSesiones, PacienteMarco, ResumenPaciente } from './pages/PacientePage';
 import { PacientesPage } from './pages/PacientesPage';
@@ -23,6 +25,7 @@ function Rutas({ email, onSalir }: { email?: string; onSalir?: () => void }) {
         <Route path="agenda" element={<AgendaPage />} />
         <Route path="centros" element={<CentrosPage />} />
         <Route path="datos" element={<DatosPage />} />
+        <Route path="pacientes/:pid/imprimir" element={<ImprimirPage />} />
         <Route path="pacientes/:pid" element={<PacienteMarco />}>
           <Route index element={<ResumenPaciente />} />
           <Route path="datos" element={<DatosPacientePage />} />
@@ -32,6 +35,7 @@ function Rutas({ email, onSalir }: { email?: string; onSalir?: () => void }) {
           <Route path="evaluaciones/:id" element={<EvaluacionPage />} />
           <Route path="sesiones" element={<ListaSesiones />} />
           <Route path="sesiones/:id" element={<SesionPage />} />
+          <Route path="adjuntos" element={<ListaAdjuntos />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
@@ -39,21 +43,23 @@ function Rutas({ email, onSalir }: { email?: string; onSalir?: () => void }) {
   );
 }
 
+function AppConSesion({ userId, email }: { userId: string; email?: string }) {
+  const repositorio = useMemo(() => new RepositorioSupabase(supabase!, userId), [userId]);
+  return (
+    // key: al cambiar de usuario se recargan los datos desde cero.
+    <DatosProvider key={userId} repositorio={repositorio}>
+      <Rutas email={email} onSalir={() => supabase!.auth.signOut()} />
+    </DatosProvider>
+  );
+}
+
 export function App() {
   const local = useMemo(() => new RepositorioLocal(), []);
-  const remoto = useMemo(() => (supabase ? new RepositorioSupabase(supabase) : null), []);
 
   return (
     <BrowserRouter>
-      {remoto ? (
-        <Acceso>
-          {(sesion) => (
-            // key: al cambiar de usuario se recargan los datos desde cero.
-            <DatosProvider key={sesion.user.id} repositorio={remoto}>
-              <Rutas email={sesion.user.email} onSalir={() => supabase!.auth.signOut()} />
-            </DatosProvider>
-          )}
-        </Acceso>
+      {supabase ? (
+        <Acceso>{(sesion) => <AppConSesion userId={sesion.user.id} email={sesion.user.email} />}</Acceso>
       ) : (
         <DatosProvider repositorio={local}>
           <Rutas />

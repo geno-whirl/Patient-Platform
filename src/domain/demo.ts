@@ -141,5 +141,6 @@ export function datosDeEjemplo(): BaseDeDatos {
     ingresos: [ing1, ing2],
     evaluaciones: [ev1, ev2],
     sesiones: [...sesionesCamila, proxCamila, s21, s22],
+    adjuntos: [],
   };
 }

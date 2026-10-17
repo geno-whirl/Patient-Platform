@@ -1,4 +1,4 @@
-import { createStore, get, set } from 'idb-keyval';
+import { createStore, del, get, set } from 'idb-keyval';
 import { COLECCIONES, type BaseDeDatos, type Coleccion, type RegistroPorColeccion } from '../domain/schema';
 import { baseVacia, type Repositorio } from './repositorio';
 
@@ -8,6 +8,8 @@ type Mapa = Record<string, unknown>;
 export class RepositorioLocal implements Repositorio {
   readonly nombre = 'local' as const;
   private store = createStore('kine-plataforma', 'colecciones');
+  // idb-keyval usa una base de datos por almacén, así que los archivos van en otra.
+  private archivos = createStore('kine-plataforma-archivos', 'archivos');
 
   private async leer(c: Coleccion): Promise<Mapa> {
     return ((await get(c, this.store)) as Mapa | undefined) ?? {};
@@ -41,5 +43,20 @@ export class RepositorioLocal implements Repositorio {
     const mapa = await this.leer(c);
     for (const id of ids) delete mapa[id];
     await set(c, mapa, this.store);
+  }
+
+  async subirArchivo(clave: string, archivo: Blob) {
+    await set(clave, archivo, this.archivos);
+    return clave;
+  }
+
+  async leerArchivo(ruta: string) {
+    const b = (await get(ruta, this.archivos)) as Blob | undefined;
+    if (!b) throw new Error('Archivo no encontrado en este navegador');
+    return b;
+  }
+
+  async eliminarArchivos(rutas: string[]) {
+    await Promise.all(rutas.map((r) => del(r, this.archivos)));
   }
 }

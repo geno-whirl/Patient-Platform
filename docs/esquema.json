@@ -1028,6 +1028,98 @@
         ],
         "description": "Sesión de tratamiento: planificación + registro de evolución (SOAP)"
       }
+    },
+    "adjuntos": {
+      "default": [],
+      "description": "Metadatos de adjuntos (los archivos no van en el respaldo JSON)",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "const": "adjunto"
+          },
+          "id": {
+            "type": "string",
+            "description": "Identificador único (UUID)"
+          },
+          "creadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de creación"
+          },
+          "actualizadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de la última modificación"
+          },
+          "pacienteId": {
+            "type": "string",
+            "description": "Id del Paciente"
+          },
+          "fecha": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Fecha clínica en formato ISO YYYY-MM-DD"
+          },
+          "categoria": {
+            "default": "otro",
+            "description": "imagen (foto clínica), examen (imagenología, laboratorio), informe, consentimiento, video u otro",
+            "type": "string",
+            "enum": [
+              "imagen",
+              "examen",
+              "informe",
+              "consentimiento",
+              "video",
+              "otro"
+            ]
+          },
+          "descripcion": {
+            "default": "",
+            "description": "Descripción y hallazgos en texto (ej: \"RM rodilla D: rotura LCA completa, edema óseo\"). Es lo que un LLM puede leer del archivo.",
+            "type": "string"
+          },
+          "nombreArchivo": {
+            "type": "string",
+            "description": "Nombre original del archivo"
+          },
+          "tipoMime": {
+            "type": "string",
+            "description": "Tipo MIME (ej: image/jpeg, application/pdf)"
+          },
+          "tamanoBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Tamaño en bytes"
+          },
+          "ruta": {
+            "type": "string",
+            "description": "Clave del archivo en el almacenamiento (Supabase Storage o navegador)"
+          },
+          "evaluacionId": {
+            "default": null,
+            "description": "Id de la Evaluacion relacionada, si corresponde",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "tipo",
+          "id",
+          "creadoEn",
+          "actualizadoEn",
+          "pacienteId",
+          "fecha",
+          "nombreArchivo",
+          "tipoMime",
+          "tamanoBytes",
+          "ruta"
+        ],
+        "description": "Archivo adjunto a la ficha (foto, examen, informe). El contenido binario se guarda aparte."
+      }
     }
   },
   "required": [

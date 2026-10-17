@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { z } from 'zod';
+import { RespaldoDrive } from '../components/RespaldoDrive';
 import { useDatos } from '../data/DatosContext';
 import { descargar } from '../domain/archivos';
 import { hoy } from '../domain/factories';
@@ -10,6 +11,7 @@ export function DatosPage() {
   const { db, modo, exportar, importar } = useDatos();
   const [centroId, setCentroId] = useState('');
   const [soloActivos, setSoloActivos] = useState(true);
+  const [anonimo, setAnonimo] = useState(true);
   const [mensaje, setMensaje] = useState('');
   const archivo = useRef<HTMLInputElement>(null);
 
@@ -18,7 +20,7 @@ export function DatosPage() {
   );
   const markdown = () =>
     `# Pacientes de kinesiología (exportado ${hoy()})\n\n` +
-    seleccion.map((p) => pacienteAMarkdown(p, db)).join('\n---\n\n');
+    seleccion.map((p) => pacienteAMarkdown(p, db, { anonimo })).join('\n---\n\n');
 
   const alImportar = async (f: File | undefined) => {
     if (!f) return;
@@ -57,10 +59,13 @@ export function DatosPage() {
           <label className="casilla">
             <input type="checkbox" checked={soloActivos} onChange={(e) => setSoloActivos(e.target.checked)} /> Solo activos
           </label>
+          <label className="casilla">
+            <input type="checkbox" checked={anonimo} onChange={(e) => setAnonimo(e.target.checked)} /> Anonimizar
+          </label>
           <span className="tenue">{seleccion.length} pacientes</span>
         </div>
         <div className="acciones acciones--izq">
-          <button className="boton boton--primario" onClick={() => descargar(`pacientes-${hoy()}.md`, markdown(), 'text/markdown')}>
+          <button className="boton boton--primario" onClick={() => descargar(`pacientes${anonimo ? '-anonimo' : ''}-${hoy()}.md`, markdown(), 'text/markdown')}>
             Descargar fichas (.md)
           </button>
           <button
@@ -74,8 +79,9 @@ export function DatosPage() {
           </button>
         </div>
         <p className="tenue">
-          ⚠️ Son datos clínicos sensibles. Úsalos solo con servicios que cumplan tus obligaciones de confidencialidad, y
-          considera anonimizar (por ejemplo, quitando RUT y contacto) antes de compartir.
+          {anonimo
+            ? 'Anonimizado: se reemplaza el nombre por un código (ej. P-3F2A9C), se quitan RUT, contacto, fecha de nacimiento (queda la edad), médico tratante y notas generales, y se enmascaran nombre, RUT, correos y teléfonos escritos en el texto libre. Los nombres de otras personas en texto libre no se detectan: revisa antes de compartir.'
+            : '⚠️ Incluye datos identificatorios. Úsalo solo con servicios que cumplan tus obligaciones de confidencialidad.'}
         </p>
       </section>
 
@@ -105,6 +111,7 @@ export function DatosPage() {
         </div>
         <p className="tenue">Importar agrega o actualiza registros por id; no borra nada.</p>
       </section>
+      {modo === 'supabase' && <RespaldoDrive />}
       {mensaje && <p className="aviso">{mensaje}</p>}
     </div>
   );

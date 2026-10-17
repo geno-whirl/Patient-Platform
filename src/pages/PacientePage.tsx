@@ -13,6 +13,7 @@ import { nuevaEvaluacion, nuevaSesion, nuevoId, nuevoIngreso } from '../domain/f
 import { pacienteAMarkdown } from '../domain/markdown';
 import { ESTADOS_PACIENTE, SEXOS, type Paciente } from '../domain/schema';
 import { descargar, nombreArchivo } from '../domain/archivos';
+import { codigoPaciente } from '../domain/anonimizar';
 
 export function usePaciente(): Paciente | undefined {
   const { pid } = useParams();
@@ -26,12 +27,14 @@ export function PacienteMarco() {
   if (!p) return <p className="vacio">Paciente no encontrado. <Link to="/">Volver</Link></p>;
   const anos = edad(p.identificacion.fechaNacimiento);
   const centro = db.centros.find((c) => c.id === p.centroId);
+  const n = db.adjuntos.filter((a) => a.pacienteId === p.id).length;
   const pestañas = [
     ['', 'Resumen'],
     ['datos', 'Datos'],
     ['ingresos', 'Ingreso'],
     ['evaluaciones', 'Evaluaciones'],
     ['sesiones', 'Sesiones'],
+    ['adjuntos', `Adjuntos${n ? ` (${n})` : ''}`],
   ];
   return (
     <div className="pila">
@@ -64,10 +67,11 @@ export function ResumenPaciente() {
   const navegar = useNavigate();
   const r = resumenPaciente(p, db);
   const [copiado, setCopiado] = useState(false);
+  const [anonimo, setAnonimo] = useState(true);
   const conclusion = r.ultimaEvaluacion?.conclusion;
 
   const copiarParaIA = async () => {
-    await navigator.clipboard.writeText(pacienteAMarkdown(p, db));
+    await navigator.clipboard.writeText(pacienteAMarkdown(p, db, { anonimo }));
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);
   };
@@ -88,10 +92,22 @@ export function ResumenPaciente() {
         </button>
         <button
           className="boton"
-          onClick={() => descargar(`${nombreArchivo(p.identificacion.nombre)}.md`, pacienteAMarkdown(p, db), 'text/markdown')}
+          onClick={() =>
+            descargar(
+              `${anonimo ? codigoPaciente(p.id) : nombreArchivo(p.identificacion.nombre)}.md`,
+              pacienteAMarkdown(p, db, { anonimo }),
+              'text/markdown',
+            )
+          }
         >
           Descargar .md
         </button>
+        <Link className="boton" to={`/pacientes/${p.id}/imprimir`}>
+          Imprimir / PDF
+        </Link>
+        <label className="casilla" title="Quita nombre, RUT, contacto y fecha de nacimiento">
+          <input type="checkbox" checked={anonimo} onChange={(e) => setAnonimo(e.target.checked)} /> Anonimizada
+        </label>
       </div>
 
       <div className="resumen__rejilla">
@@ -178,7 +194,7 @@ export function DatosPacientePage() {
 function FormDatosPaciente({ paciente }: { paciente: Paciente }) {
   const { db, eliminarPaciente } = useDatos();
   const navegar = useNavigate();
-  const { borrador, fijar, estado, mensajeError } = useAutoguardado('pacientes', paciente);
+  const { borrador, fijar, estado, mensajeError, descartar } = useAutoguardado('pacientes', paciente);
   const t = enlazarTexto(borrador, fijar);
   const id = borrador.identificacion;
   const anos = edad(id.fechaNacimiento);
@@ -186,6 +202,7 @@ function FormDatosPaciente({ paciente }: { paciente: Paciente }) {
   const eliminar = async () => {
     const n = db.sesiones.filter((s) => s.pacienteId === paciente.id).length;
     if (!confirm(`¿Eliminar a ${id.nombre} y todos sus registros (${n} sesiones)? Esta acción no se puede deshacer.`)) return;
+    descartar();
     await eliminarPaciente(paciente.id);
     navegar('/');
   };
