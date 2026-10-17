@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { supabase } from '../data/supabase';
+import { recurso, urlApp } from '../rutaBase';
 
 /** Exige sesión iniciada cuando Supabase está configurado. */
 export function Acceso({ children }: { children: (sesion: Session) => ReactNode }) {
@@ -27,7 +28,7 @@ function PantallaIngreso() {
     setError('');
     const { error } = await supabase!.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: urlApp() },
     });
     if (error) setError(error.message);
   };
@@ -37,7 +38,7 @@ function PantallaIngreso() {
     setError('');
     const { error } = await supabase!.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin, shouldCreateUser: true },
+      options: { emailRedirectTo: urlApp(), shouldCreateUser: true },
     });
     if (error) setError(error.message);
     else setMensaje(`Te enviamos un enlace de acceso a ${email}. Revisa tu correo.`);
@@ -46,7 +47,7 @@ function PantallaIngreso() {
   return (
     <main className="ingreso-app">
       <div className="tarjeta ingreso-app__caja">
-        <img src="/favicon.svg" alt="" width={48} height={48} />
+        <img src={recurso('favicon.svg')} alt="" width={48} height={48} />
         <h1>Ficha kinesiológica</h1>
         <p className="tenue">Ingresa para acceder a tus pacientes.</p>
         <button className="boton boton--primario boton--ancho" onClick={conGoogle}>

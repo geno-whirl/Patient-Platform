@@ -16,7 +16,7 @@ basada en el formato de ingreso en papel (anamnesis próxima/remota, evaluación
 | **Evolución y agenda** | Gráfico de EVA, próxima sesión e indicaciones vigentes; agenda por centro, más una vista de sesiones pasadas que quedaron sin registrar. |
 | **Datos e IA** | Fichas en Markdown para un LLM (**anonimizadas** por defecto), respaldo JSON con importación, esquema de datos y **respaldo automático en Google Drive**. |
 
-Todo se guarda solo mientras escribes.
+Todo se guarda solo mientras escribes. Además es una **app instalable (PWA)**: se agrega a la pantalla de inicio del celular, tablet o computador, se abre en su propia ventana y funciona sin conexión.
 
 ## Arquitectura
 
@@ -94,7 +94,7 @@ select vault.create_secret('<el mismo SECRETO_CRON>', 'secreto_cron');
 
 pg_cron revisa cada hora a quién le toca respaldo (diario o semanal, según elija cada usuario).
 
-**7. Publicar la app** (Vercel o Netlify): importa el repo y define estas variables:
+**7. Publicar la app**, en GitHub Pages (sección siguiente) o en Vercel/Netlify, con estas variables:
 
 ```
 VITE_SUPABASE_URL=https://<ref>.supabase.co
@@ -105,6 +105,33 @@ VITE_GOOGLE_CLIENT_ID=<client id>
 **8. Cerrar el registro.** Entra una vez para crear tu usuario y luego desactiva *Allow new users to sign up* en Supabase (*Authentication → Sign In / Providers*).
 
 Por último, en la app ve a **Datos e IA → Conectar Google Drive**. Se hace el primer respaldo de inmediato.
+
+### Publicar en GitHub Pages (gratis)
+
+El workflow `.github/workflows/pages.yml` corre los tests, compila y publica la app en
+**https://geno-whirl.github.io/Patient-Platform/** cada vez que se sube un cambio a la rama principal.
+
+1. Activa Pages una sola vez: *Settings → Pages → Build and deployment → Source: **GitHub Actions***.
+2. Para usar Supabase y Drive en la versión publicada, define en *Settings → Secrets and variables → Actions → **Variables***:
+   `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` y `VITE_GOOGLE_CLIENT_ID`. Son valores públicos por diseño; la seguridad la da RLS. Sin ellas, la app publicada funciona en modo local.
+3. Agrega la URL publicada en los lugares donde se autoriza el regreso:
+   - Supabase → *Authentication → URL Configuration*: `https://geno-whirl.github.io/Patient-Platform/`
+   - Google Cloud → URI de redireccionamiento: `https://geno-whirl.github.io/Patient-Platform/datos`
+4. Vuelve a ejecutar el workflow (*Actions → Publicar en GitHub Pages → Run workflow*) para que tome las variables.
+
+El repositorio es público, pero **solo el código** queda a la vista. Los datos de pacientes nunca van al repositorio: viven en Supabase (protegidos por RLS) o en el navegador (modo local).
+
+### Instalar como app (PWA)
+
+- **Android / Chrome / Edge:** botón **“Instalar app”** en la barra superior, o menú ⋮ → *Instalar aplicación*.
+- **iPhone / iPad (Safari):** botón *Compartir* → **Agregar a pantalla de inicio**.
+- **Mac / Windows:** ícono de instalar en la barra de direcciones de Chrome o Edge.
+
+Sin conexión, la app abre igual y muestra “Sin conexión”:
+- **Modo local:** todo sigue funcionando.
+- **Con Supabase:** se puede consultar lo que ya estaba cargado, pero los cambios no se guardan hasta recuperar la conexión. El indicador del formulario muestra el error de guardado.
+
+El service worker (`public/sw.js`) solo guarda en caché los archivos de la app, nunca datos de Supabase ni de Google.
 
 ### C. Desarrollo con Supabase local (Docker)
 

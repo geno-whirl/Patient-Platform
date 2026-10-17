@@ -16,6 +16,7 @@ import { IngresoPage } from './pages/IngresoPage';
 import { DatosPacientePage, ListaEvaluaciones, ListaIngresos, ListaSesiones, PacienteMarco, ResumenPaciente } from './pages/PacientePage';
 import { PacientesPage } from './pages/PacientesPage';
 import { SesionPage } from './pages/SesionPage';
+import { BASE } from './rutaBase';
 
 function Rutas({ email, onSalir }: { email?: string; onSalir?: () => void }) {
   return (
@@ -57,7 +58,7 @@ export function App() {
   const local = useMemo(() => new RepositorioLocal(), []);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={BASE.replace(/\/$/, '') || '/'}>
       {supabase ? (
         <Acceso>{(sesion) => <AppConSesion userId={sesion.user.id} email={sesion.user.email} />}</Acceso>
       ) : (

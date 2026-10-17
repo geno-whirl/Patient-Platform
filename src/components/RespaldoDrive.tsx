@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 import { fechaLegible } from '../domain/clinica';
+import { urlApp } from '../rutaBase';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
 const URL_AUTORIZACION = (import.meta.env.VITE_GOOGLE_AUTH_URL as string | undefined) ?? 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -17,7 +18,7 @@ interface Estado {
   adjuntos_subidos: Record<string, string>;
 }
 
-const redirectUri = () => `${window.location.origin}/datos`;
+const redirectUri = () => urlApp('datos');
 
 function horaLegible(iso: string) {
   const d = new Date(iso);

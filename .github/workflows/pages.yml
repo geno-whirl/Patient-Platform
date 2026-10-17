@@ -1,0 +1,59 @@
+# Publica la app en GitHub Pages: https://<usuario>.github.io/<repo>/
+#
+# Requisito (una vez): Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# Opcional, para usar Supabase y Google Drive en la versión publicada, define en
+# Settings → Secrets and variables → Actions → Variables:
+#   VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_GOOGLE_CLIENT_ID
+# (son valores públicos por diseño; la seguridad la da RLS en Supabase).
+# Sin ellas, la app publicada funciona en modo local (datos solo en el navegador).
+name: Publicar en GitHub Pages
+
+on:
+  push:
+    branches: [main, claude/kinesiology-patient-platform-ivsmj1]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  compilar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Compilar
+        run: npm run build
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+      # GitHub Pages no tiene reescrituras: 404.html = index.html para que las rutas internas
+      # (ej. /pacientes/…) carguen la app al abrirlas directamente o al recargar.
+      - run: cp dist/index.html dist/404.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  publicar:
+    needs: compilar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - id: despliegue
+        uses: actions/deploy-pages@v4

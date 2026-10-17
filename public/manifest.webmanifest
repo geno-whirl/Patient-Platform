@@ -1,0 +1,22 @@
+{
+  "name": "Kine · Ficha clínica",
+  "short_name": "Kine",
+  "description": "Ingreso, evaluación, planificación y seguimiento de pacientes de kinesiología.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0f766e",
+  "background_color": "#f6f7f6",
+  "categories": ["medical", "health", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Pacientes", "url": "./", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Agenda", "url": "./agenda", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}
