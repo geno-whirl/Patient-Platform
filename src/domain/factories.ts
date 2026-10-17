@@ -7,8 +7,14 @@ import {
   type Centro,
   type Evaluacion,
   type Ingreso,
+  type EjercicioBiblioteca,
   type Paciente,
+  type PlantillaSesion,
+  type ProgramaTratamiento,
   type Sesion,
+  EjercicioBibliotecaSchema,
+  PlantillaSesionSchema,
+  ProgramaTratamientoSchema,
 } from './schema';
 
 export const nuevoId = (): string => crypto.randomUUID();
@@ -40,3 +46,12 @@ export const nuevaEvaluacion = (pacienteId: string, clase: Evaluacion['clase'] =
 
 export const nuevaSesion = (pacienteId: string, numero: number, fecha = hoy()): Sesion =>
   SesionSchema.parse({ tipo: 'sesion', ...base(), pacienteId, numero, fecha });
+
+export const nuevoEjercicioBiblioteca = (nombre: string): EjercicioBiblioteca =>
+  EjercicioBibliotecaSchema.parse({ tipo: 'ejercicio', ...base(), nombre, categoria: 'fuerza' });
+
+export const nuevaPlantilla = (nombre: string): PlantillaSesion =>
+  PlantillaSesionSchema.parse({ tipo: 'plantilla', ...base(), nombre });
+
+export const nuevoPrograma = (nombre: string): ProgramaTratamiento =>
+  ProgramaTratamientoSchema.parse({ tipo: 'programa', ...base(), nombre });

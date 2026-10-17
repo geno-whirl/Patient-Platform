@@ -898,6 +898,46 @@
               "no_asistio"
             ]
           },
+          "programa": {
+            "default": null,
+            "description": "Programa de tratamiento del que proviene la sesión (null = sesión suelta)",
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Id del ProgramaTratamiento"
+                  },
+                  "nombre": {
+                    "type": "string",
+                    "description": "Nombre del programa al aplicarlo"
+                  },
+                  "numero": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Posición de esta sesión dentro del programa (1 = primera)"
+                  },
+                  "total": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991,
+                    "description": "Cantidad de sesiones del programa"
+                  }
+                },
+                "required": [
+                  "id",
+                  "nombre",
+                  "numero",
+                  "total"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "planificacion": {
             "description": "Lo que se planificó hacer",
             "default": {},
@@ -917,6 +957,14 @@
                     "id": {
                       "type": "string"
                     },
+                    "ejercicioId": {
+                      "default": null,
+                      "description": "Id del EjercicioBiblioteca de origen (null = ejercicio escrito a mano)",
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
                     "nombre": {
                       "default": "",
                       "description": "Ejercicio o intervención (ej: \"Sentadilla búlgara\", \"Movilización grado III\")",
@@ -929,12 +977,17 @@
                     },
                     "repeticiones": {
                       "default": "",
-                      "description": "Repeticiones o tiempo",
+                      "description": "Repeticiones o tiempo (ej: \"12\", \"30 s\", \"8 c/lado\")",
                       "type": "string"
                     },
                     "carga": {
                       "default": "",
-                      "description": "Carga / intensidad (kg, RPE, banda, etc.)",
+                      "description": "Carga / intensidad (kg, RPE, color de banda, % 1RM, etc.)",
+                      "type": "string"
+                    },
+                    "descanso": {
+                      "default": "",
+                      "description": "Descanso entre series (ej: \"60 s\")",
                       "type": "string"
                     },
                     "notas": {
@@ -1119,6 +1172,441 @@
           "ruta"
         ],
         "description": "Archivo adjunto a la ficha (foto, examen, informe). El contenido binario se guarda aparte."
+      }
+    },
+    "ejercicios": {
+      "default": [],
+      "description": "Biblioteca de ejercicios",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "const": "ejercicio"
+          },
+          "id": {
+            "type": "string",
+            "description": "Identificador único (UUID)"
+          },
+          "creadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de creación"
+          },
+          "actualizadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de la última modificación"
+          },
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nombre del ejercicio"
+          },
+          "categoria": {
+            "type": "string",
+            "enum": [
+              "fuerza",
+              "potencia",
+              "pliometria",
+              "movilidad",
+              "flexibilidad",
+              "estabilidad",
+              "equilibrio",
+              "neurodinamia",
+              "acondicionamiento",
+              "respiratorio"
+            ],
+            "description": "Cualidad que trabaja principalmente"
+          },
+          "regiones": {
+            "default": [],
+            "description": "Regiones corporales que trabaja",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "cervical",
+                "toracica",
+                "lumbar",
+                "core",
+                "hombro",
+                "codo_muneca_mano",
+                "cadera",
+                "rodilla",
+                "tobillo_pie",
+                "tren_superior",
+                "tren_inferior",
+                "cuerpo_completo"
+              ]
+            }
+          },
+          "equipamiento": {
+            "default": [],
+            "description": "Implementos necesarios",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "peso_corporal",
+                "banda_elastica",
+                "mini_banda",
+                "mancuerna",
+                "kettlebell",
+                "barra",
+                "polea",
+                "maquina",
+                "balon_medicinal",
+                "fitball",
+                "bosu",
+                "superficie_inestable",
+                "cajon_step",
+                "suspension",
+                "foam_roller",
+                "baston",
+                "disco_deslizante",
+                "escalera_agilidad",
+                "bicicleta",
+                "otro"
+              ]
+            }
+          },
+          "descripcion": {
+            "default": "",
+            "description": "Ejecución y claves técnicas",
+            "type": "string"
+          },
+          "series": {
+            "default": "",
+            "description": "Series sugeridas",
+            "type": "string"
+          },
+          "repeticiones": {
+            "default": "",
+            "description": "Repeticiones o tiempo sugeridos",
+            "type": "string"
+          },
+          "carga": {
+            "default": "",
+            "description": "Carga / intensidad sugerida",
+            "type": "string"
+          },
+          "descanso": {
+            "default": "",
+            "description": "Descanso sugerido",
+            "type": "string"
+          },
+          "etiquetas": {
+            "default": [],
+            "description": "Etiquetas libres (ej: \"excéntrico\", \"isométrico\", \"unilateral\")",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "favorito": {
+            "default": false,
+            "description": "Marcado como favorito",
+            "type": "boolean"
+          },
+          "predefinido": {
+            "default": false,
+            "description": "Viene del catálogo base de la app",
+            "type": "boolean"
+          },
+          "archivado": {
+            "default": false,
+            "description": "Oculto de la biblioteca (los predefinidos se archivan en vez de borrarse)",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "tipo",
+          "id",
+          "creadoEn",
+          "actualizadoEn",
+          "nombre",
+          "categoria"
+        ],
+        "description": "Ejercicio de la biblioteca personal; se agrega a las sesiones como EjercicioSesion"
+      }
+    },
+    "plantillas": {
+      "default": [],
+      "description": "Plantillas de sesión",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "const": "plantilla"
+          },
+          "id": {
+            "type": "string",
+            "description": "Identificador único (UUID)"
+          },
+          "creadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de creación"
+          },
+          "actualizadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de la última modificación"
+          },
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nombre de la plantilla (ej: \"Rodilla post-LCA · fase 1\")"
+          },
+          "descripcion": {
+            "default": "",
+            "description": "Para qué sirve, indicaciones y criterios de uso",
+            "type": "string"
+          },
+          "etiquetas": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "objetivos": {
+            "default": "",
+            "description": "Objetivos de la sesión que se copian al aplicarla",
+            "type": "string"
+          },
+          "ejercicios": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "ejercicioId": {
+                  "default": null,
+                  "description": "Id del EjercicioBiblioteca de origen (null = ejercicio escrito a mano)",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "nombre": {
+                  "default": "",
+                  "description": "Ejercicio o intervención (ej: \"Sentadilla búlgara\", \"Movilización grado III\")",
+                  "type": "string"
+                },
+                "series": {
+                  "default": "",
+                  "description": "Series",
+                  "type": "string"
+                },
+                "repeticiones": {
+                  "default": "",
+                  "description": "Repeticiones o tiempo (ej: \"12\", \"30 s\", \"8 c/lado\")",
+                  "type": "string"
+                },
+                "carga": {
+                  "default": "",
+                  "description": "Carga / intensidad (kg, RPE, color de banda, % 1RM, etc.)",
+                  "type": "string"
+                },
+                "descanso": {
+                  "default": "",
+                  "description": "Descanso entre series (ej: \"60 s\")",
+                  "type": "string"
+                },
+                "notas": {
+                  "default": "",
+                  "description": "Indicaciones o progresión",
+                  "type": "string"
+                },
+                "realizado": {
+                  "default": false,
+                  "description": "Si se realizó en la sesión",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "description": "Ejercicio o intervención planificada para la sesión"
+            }
+          },
+          "notas": {
+            "default": "",
+            "description": "Notas de planificación que se copian al aplicarla",
+            "type": "string"
+          },
+          "predefinido": {
+            "default": false,
+            "description": "Viene con la app como ejemplo",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "tipo",
+          "id",
+          "creadoEn",
+          "actualizadoEn",
+          "nombre"
+        ],
+        "description": "Plantilla de sesión: objetivos y ejercicios reutilizables"
+      }
+    },
+    "programas": {
+      "default": [],
+      "description": "Programas de tratamiento",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo": {
+            "type": "string",
+            "const": "programa"
+          },
+          "id": {
+            "type": "string",
+            "description": "Identificador único (UUID)"
+          },
+          "creadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de creación"
+          },
+          "actualizadoEn": {
+            "type": "string",
+            "description": "Marca de tiempo ISO 8601 de la última modificación"
+          },
+          "nombre": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nombre del programa (ej: \"Manguito rotador · 10 sesiones\")"
+          },
+          "descripcion": {
+            "default": "",
+            "description": "Indicaciones, criterios de inclusión y de progresión",
+            "type": "string"
+          },
+          "etiquetas": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sesionesPorSemana": {
+            "default": 2,
+            "description": "Frecuencia sugerida",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 7
+          },
+          "sesiones": {
+            "default": [],
+            "description": "Sesiones tipo, en orden",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "titulo": {
+                  "default": "",
+                  "description": "Título o fase de la sesión (ej: \"Fase 1 · analgesia y rango\")",
+                  "type": "string"
+                },
+                "objetivos": {
+                  "default": "",
+                  "description": "Objetivos de la sesión",
+                  "type": "string"
+                },
+                "ejercicios": {
+                  "default": [],
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "ejercicioId": {
+                        "default": null,
+                        "description": "Id del EjercicioBiblioteca de origen (null = ejercicio escrito a mano)",
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "nombre": {
+                        "default": "",
+                        "description": "Ejercicio o intervención (ej: \"Sentadilla búlgara\", \"Movilización grado III\")",
+                        "type": "string"
+                      },
+                      "series": {
+                        "default": "",
+                        "description": "Series",
+                        "type": "string"
+                      },
+                      "repeticiones": {
+                        "default": "",
+                        "description": "Repeticiones o tiempo (ej: \"12\", \"30 s\", \"8 c/lado\")",
+                        "type": "string"
+                      },
+                      "carga": {
+                        "default": "",
+                        "description": "Carga / intensidad (kg, RPE, color de banda, % 1RM, etc.)",
+                        "type": "string"
+                      },
+                      "descanso": {
+                        "default": "",
+                        "description": "Descanso entre series (ej: \"60 s\")",
+                        "type": "string"
+                      },
+                      "notas": {
+                        "default": "",
+                        "description": "Indicaciones o progresión",
+                        "type": "string"
+                      },
+                      "realizado": {
+                        "default": false,
+                        "description": "Si se realizó en la sesión",
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ],
+                    "description": "Ejercicio o intervención planificada para la sesión"
+                  }
+                },
+                "notas": {
+                  "default": "",
+                  "description": "Notas de planificación",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "description": "Una sesión tipo dentro de un programa de tratamiento"
+            }
+          },
+          "predefinido": {
+            "default": false,
+            "description": "Viene con la app como ejemplo",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "tipo",
+          "id",
+          "creadoEn",
+          "actualizadoEn",
+          "nombre"
+        ],
+        "description": "Programa de tratamiento: secuencia de sesiones tipo que se aplica a un paciente"
       }
     }
   },

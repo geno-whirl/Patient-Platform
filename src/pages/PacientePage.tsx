@@ -5,6 +5,7 @@ import { EntradaEtiquetas } from '../components/EntradaEtiquetas';
 import { GraficoEva } from '../components/GraficoEva';
 import { InsigniaCentro, InsigniaEstadoPaciente, InsigniaEstadoSesion } from '../components/Insignias';
 import { MapaDolor } from '../components/MapaDolor';
+import { AplicarPrograma } from '../components/AplicarPrograma';
 import { useDatos } from '../data/DatosContext';
 import { useAutoguardado } from '../data/useAutoguardado';
 import { edad, ETIQUETAS_ESTADO_PACIENTE, fechaLegible } from '../domain/clinica';
@@ -21,9 +22,31 @@ export function usePaciente(): Paciente | undefined {
   return db.pacientes.find((p) => p.id === pid);
 }
 
+/** Confirma y elimina un paciente con todos sus registros. Devuelve true si se eliminó. */
+export function useEliminarPaciente() {
+  const { db, eliminarPaciente } = useDatos();
+  return async (p: Paciente): Promise<boolean> => {
+    const cuenta = (xs: { pacienteId: string }[]) => xs.filter((x) => x.pacienteId === p.id).length;
+    const detalle = [
+      `${cuenta(db.sesiones)} sesiones`,
+      `${cuenta(db.evaluaciones)} evaluaciones`,
+      `${cuenta(db.ingresos)} ingresos`,
+      `${cuenta(db.adjuntos)} adjuntos`,
+    ].join(', ');
+    const ok = confirm(
+      `¿Eliminar a ${p.identificacion.nombre}?\n\nSe borrarán también sus registros (${detalle}). Esta acción no se puede deshacer.\n\nSi solo terminó el tratamiento, puedes cambiar su estado a "Alta" en Datos.`,
+    );
+    if (!ok) return false;
+    await eliminarPaciente(p.id);
+    return true;
+  };
+}
+
 export function PacienteMarco() {
   const p = usePaciente();
   const { db } = useDatos();
+  const navegar = useNavigate();
+  const eliminarConConfirmacion = useEliminarPaciente();
   if (!p) return <p className="vacio">Paciente no encontrado. <Link to="/">Volver</Link></p>;
   const anos = edad(p.identificacion.fechaNacimiento);
   const centro = db.centros.find((c) => c.id === p.centroId);
@@ -46,6 +69,15 @@ export function PacienteMarco() {
         {anos != null && <span className="tenue">{anos} años</span>}
         <InsigniaCentro centro={centro} />
         <InsigniaEstadoPaciente estado={p.estado} />
+        <span className="espaciador" />
+        <button
+          className="boton boton--chico boton--peligro"
+          onClick={async () => {
+            if (await eliminarConConfirmacion(p)) navegar('/');
+          }}
+        >
+          Eliminar paciente
+        </button>
       </div>
       <nav className="pestanas">
         {pestañas.map(([ruta, nombre]) => (
@@ -192,19 +224,17 @@ export function DatosPacientePage() {
 }
 
 function FormDatosPaciente({ paciente }: { paciente: Paciente }) {
-  const { db, eliminarPaciente } = useDatos();
+  const { db } = useDatos();
   const navegar = useNavigate();
   const { borrador, fijar, estado, mensajeError, descartar } = useAutoguardado('pacientes', paciente);
   const t = enlazarTexto(borrador, fijar);
   const id = borrador.identificacion;
   const anos = edad(id.fechaNacimiento);
 
+  const eliminarConConfirmacion = useEliminarPaciente();
   const eliminar = async () => {
-    const n = db.sesiones.filter((s) => s.pacienteId === paciente.id).length;
-    if (!confirm(`¿Eliminar a ${id.nombre} y todos sus registros (${n} sesiones)? Esta acción no se puede deshacer.`)) return;
     descartar();
-    await eliminarPaciente(paciente.id);
-    navegar('/');
+    if (await eliminarConConfirmacion(paciente)) navegar('/');
   };
 
   return (
@@ -347,6 +377,8 @@ export function ListaSesiones() {
   const { db, guardar } = useDatos();
   const navegar = useNavigate();
   const sesiones = sesionesDe(p.id, db);
+  const [aplicando, setAplicando] = useState(false);
+  const [aviso, setAviso] = useState('');
   const crear = async () => {
     const s = await guardar('sesiones', siguienteSesion(p.id, sesiones));
     navegar(s.id);
@@ -357,7 +389,17 @@ export function ListaSesiones() {
         <button className="boton boton--primario" onClick={crear}>
           + Planificar sesión {sesiones.length ? '(copia el plan anterior)' : ''}
         </button>
+        <button className="boton" onClick={() => setAplicando(true)}>
+          Aplicar programa de tratamiento
+        </button>
       </div>
+      {aviso && <p className="aviso aviso--ok">{aviso}</p>}
+      <AplicarPrograma
+        pacienteId={p.id}
+        abierto={aplicando}
+        onCerrar={() => setAplicando(false)}
+        onAplicado={(n) => setAviso(`Se crearon ${n} sesiones planificadas. Aparecen también en la Agenda.`)}
+      />
       {sesiones.length === 0 && <p className="vacio">Sin sesiones.</p>}
       <ol className="linea-tiempo">
         {[...sesiones].reverse().map((s) => (
@@ -367,6 +409,11 @@ export function ListaSesiones() {
                 Sesión {s.numero} · {fechaLegible(s.fecha)} {s.hora}
               </strong>
               <InsigniaEstadoSesion estado={s.estado} />
+              {s.programa && (
+                <span className="insignia" title={s.programa.nombre}>
+                  {s.programa.nombre.split(' · ')[0]} {s.programa.numero}/{s.programa.total}
+                </span>
+              )}
               {(s.registro.evaPre != null || s.registro.evaPost != null) && (
                 <span className="tenue">
                   EVA {s.registro.evaPre ?? '?'} → {s.registro.evaPost ?? '?'}

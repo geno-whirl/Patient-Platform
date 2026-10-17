@@ -74,7 +74,18 @@ export interface ResultadoAnonimizado {
 
 /** Devuelve una copia anonimizada de los pacientes indicados y sus registros. */
 export function anonimizar(db: BaseDeDatos, pacientes: Paciente[] = db.pacientes): ResultadoAnonimizado {
-  const salida: BaseDeDatos = { centros: db.centros, pacientes: [], ingresos: [], evaluaciones: [], sesiones: [], adjuntos: [] };
+  const salida: BaseDeDatos = {
+    centros: db.centros,
+    pacientes: [],
+    ingresos: [],
+    evaluaciones: [],
+    sesiones: [],
+    adjuntos: [],
+    // La biblioteca, las plantillas y los programas no contienen datos de pacientes.
+    ejercicios: db.ejercicios,
+    plantillas: db.plantillas,
+    programas: db.programas,
+  };
   const edades: Record<string, number | null> = {};
 
   for (const p of pacientes) {

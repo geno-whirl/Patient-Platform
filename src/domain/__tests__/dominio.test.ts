@@ -31,7 +31,7 @@ function baseEjemplo() {
   s1.estado = 'realizada';
   s1.registro.evaPre = 6;
   s1.registro.evaPost = 4;
-  s1.planificacion.ejercicios.push({ id: 'e1', nombre: 'Sentadilla isométrica', series: '3', repeticiones: '30s', carga: '', notas: '', realizado: true });
+  s1.planificacion.ejercicios.push({ id: 'e1', ejercicioId: null, nombre: 'Sentadilla isométrica', series: '3', repeticiones: '30s', carga: '', descanso: '', notas: '', realizado: true });
   const s2 = nuevaSesion(ana.id, 2, '2026-01-12');
   s2.estado = 'realizada';
   s2.registro.evaPre = 4;
@@ -45,6 +45,9 @@ function baseEjemplo() {
     evaluaciones: [ev],
     sesiones: [s3, s1, s2],
     adjuntos: [],
+    ejercicios: [],
+    plantillas: [],
+    programas: [],
   };
   return { db, centro, ana, beto };
 }

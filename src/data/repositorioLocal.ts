@@ -7,6 +7,7 @@ type Mapa = Record<string, unknown>;
 /** Guarda cada colección como un objeto { id: registro } en IndexedDB del navegador. */
 export class RepositorioLocal implements Repositorio {
   readonly nombre = 'local' as const;
+  readonly semillaIds = '';
   private store = createStore('kine-plataforma', 'colecciones');
   // idb-keyval usa una base de datos por almacén, así que los archivos van en otra.
   private archivos = createStore('kine-plataforma-archivos', 'archivos');

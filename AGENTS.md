@@ -13,11 +13,12 @@ Hay tres formatos con la misma información:
    Si el título es un código como `P-3F2A9C`, la ficha está **anonimizada**: ese código reemplaza al nombre
    del paciente en todo el texto, y `[RUT]`, `[email]` y `[teléfono]` marcan datos que se quitaron.
 2. **JSON de respaldo** (descarga manual o carpeta “Kine — respaldos” en Google Drive): objeto
-   `{ formato, versionEsquema, exportadoEn, centros[], pacientes[], ingresos[], evaluaciones[], sesiones[], adjuntos[] }`.
+   `{ formato, versionEsquema, exportadoEn, centros[], pacientes[], ingresos[], evaluaciones[], sesiones[], adjuntos[], ejercicios[], plantillas[], programas[] }`.
    El esquema completo, con descripciones, está en `docs/esquema.json`.
-3. **SQL (Supabase)**: tablas `centros`, `pacientes`, `ingresos`, `evaluaciones`, `sesiones` y `adjuntos`, cada una con `data jsonb`
+3. **SQL (Supabase)**: tablas `centros`, `pacientes`, `ingresos`, `evaluaciones`, `sesiones`, `adjuntos`, `ejercicios`, `plantillas` y `programas`, cada una con `data jsonb`
    (el mismo documento del JSON) y columnas de conveniencia (`nombre`, `centro_id`, `paciente_id`, `fecha`, `estado` y `etiquetas`).
-   Además hay vistas `v_pacientes` (resumen de seguimiento) y `v_evolucion_eva` (EVA de inicio y término por sesión realizada).
+   Además hay vistas `v_pacientes` (resumen de seguimiento), `v_evolucion_eva` (EVA de inicio y término por sesión realizada)
+   y `v_ejercicios_realizados` (cada ejercicio marcado como realizado, con paciente, fecha y dosis).
 
 ## Convenciones del modelo
 
@@ -27,8 +28,17 @@ Hay tres formatos con la misma información:
 - Evaluación del dolor con **ALICIA**: Aparición, Localización, Intensidad, Carácter, Irradiación, Agravantes/Atenuantes.
 - **Mapa del dolor**: `dolor.mapa[]` con `vista`, `region`, `lado` (siempre el lado del **paciente**), `sintoma`, `intensidad` y `nota`. `x` e `y` son coordenadas de dibujo; para razonar usa `region` y `lado`.
 - **Sesión** = `planificacion` (objetivos y ejercicios) + `registro` en formato SOAP (`subjetivo`, `objetivo`, `analisis`, `plan`) con `evaPre` y `evaPost`.
+  Cada ejercicio de la sesión tiene `nombre`, `series`, `repeticiones`, `carga`, `descanso`, `notas`, `realizado` y `ejercicioId`
+  (id del ejercicio de la biblioteca de origen, o `null` si se escribió a mano).
+  `programa` (o `null`) indica el programa de tratamiento del que proviene: `{ id, nombre, numero, total }`, ej. sesión 4 de 10.
   `estado`: `planificada` | `realizada` | `cancelada` | `no_asistio`. Solo las sesiones realizadas cuentan como evolución.
 - `paciente.estado`: `activo` | `en_pausa` | `alta`. `etiquetas[]` son palabras en minúscula con guiones.
+- **Biblioteca** (`ejercicios`): `nombre`, `categoria` (fuerza, potencia, pliometria, movilidad, flexibilidad, estabilidad,
+  equilibrio, neurodinamia, acondicionamiento, respiratorio), `regiones[]`, `equipamiento[]`, dosis sugerida y `descripcion`.
+  `predefinido` = viene del catálogo base; `archivado` = oculto (no se usa más).
+- **Plantilla** (`plantillas`): sesión tipo reutilizable (`objetivos`, `ejercicios[]`, `notas`).
+- **Programa de tratamiento** (`programas`): secuencia ordenada de sesiones tipo (`sesiones[]`, cada una con `titulo`/fase,
+  `objetivos` y `ejercicios[]`) y `sesionesPorSemana`. Al aplicarlo a un paciente se crean sesiones planificadas con fecha.
 - **Adjunto**: metadatos de un archivo (foto, examen, informe). El contenido binario no está en el JSON;
   lo que se puede leer es `descripcion` (hallazgos escritos por el kinesiólogo), `categoria` y `fecha`.
   `evaluacionId` lo vincula opcionalmente a una evaluación.
@@ -48,6 +58,18 @@ having (array_agg(eva_post order by fecha desc))[1] >= (array_agg(eva_pre order 
 
 -- Pacientes con una etiqueta
 select nombre from pacientes where etiquetas ? 'lumbar';
+
+-- Ejercicios más usados en sesiones realizadas el último mes
+select ejercicio, count(*) from v_ejercicios_realizados
+where fecha >= to_char(now() - interval '30 days', 'YYYY-MM-DD') group by ejercicio order by 2 desc limit 10;
+
+-- Avance de cada paciente en su programa de tratamiento
+select p.nombre, s.data -> 'programa' ->> 'nombre' as programa,
+       count(*) filter (where s.estado = 'realizada') as realizadas,
+       max((s.data -> 'programa' ->> 'total')::int) as total
+from sesiones s join pacientes p on p.id = s.paciente_id
+where s.data -> 'programa' is not null and s.data -> 'programa' <> 'null'::jsonb
+group by 1, 2;
 ```
 
 ## Al modificar el código
@@ -57,4 +79,7 @@ select nombre from pacientes where etiquetas ? 'lumbar';
   Pruébalas con `npx supabase db reset` en el Supabase local.
 - La ficha (Markdown y vista de impresión) se arma en `src/domain/ficha.ts`; la anonimización está en `src/domain/anonimizar.ts`.
 - Las Edge Functions (`supabase/functions/`) no usan dependencias externas: llaman a las APIs REST de Supabase y Google con `fetch`.
+  Si agregas una colección, súmala también a `COLECCIONES` en `supabase/functions/_shared/respaldo.ts`.
+- El catálogo base (ejercicios, plantillas y programas) está en `src/domain/catalogo.ts`. Sus ids son deterministas por
+  usuario (UUID v5 del nombre + usuario): agregar filas es seguro; **no renombres** las existentes, porque se crearían de nuevo.
 - Ejecuta `npm test` y `npm run typecheck` antes de hacer commit.

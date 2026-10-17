@@ -9,10 +9,14 @@ import { baseVacia, type Repositorio } from './repositorio';
  */
 export class RepositorioSupabase implements Repositorio {
   readonly nombre = 'supabase' as const;
+  readonly semillaIds: string;
+
   constructor(
     private sb: SupabaseClient,
     private userId: string,
-  ) {}
+  ) {
+    this.semillaIds = `${userId}:`;
+  }
 
   private bucket() {
     return this.sb.storage.from('adjuntos');

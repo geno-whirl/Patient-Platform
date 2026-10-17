@@ -6,6 +6,8 @@ import type { BaseDeDatos, Coleccion, RegistroPorColeccion } from '../domain/sch
  */
 export interface Repositorio {
   readonly nombre: 'local' | 'supabase';
+  /** Distingue los ids deterministas del catálogo base entre usuarios ('' en modo local). */
+  readonly semillaIds: string;
   cargarTodo(): Promise<BaseDeDatos>;
   guardar<C extends Coleccion>(coleccion: C, registro: RegistroPorColeccion[C]): Promise<void>;
   guardarVarios<C extends Coleccion>(coleccion: C, registros: RegistroPorColeccion[C][]): Promise<void>;
@@ -24,4 +26,7 @@ export const baseVacia = (): BaseDeDatos => ({
   evaluaciones: [],
   sesiones: [],
   adjuntos: [],
+  ejercicios: [],
+  plantillas: [],
+  programas: [],
 });

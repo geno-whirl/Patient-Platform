@@ -1,6 +1,6 @@
 /** Datos ficticios para explorar la plataforma. */
 import { hoy, nuevaEvaluacion, nuevaSesion, nuevoCentro, nuevoId, nuevoIngreso, nuevoPaciente } from './factories';
-import type { BaseDeDatos, Ejercicio } from './schema';
+import type { BaseDeDatos, EjercicioSesion } from './schema';
 
 const dia = (delta: number) => {
   const d = new Date();
@@ -8,12 +8,14 @@ const dia = (delta: number) => {
   return hoy(d);
 };
 
-const ej = (nombre: string, series: string, repeticiones: string, carga = '', realizado = false): Ejercicio => ({
+const ej = (nombre: string, series: string, repeticiones: string, carga = '', realizado = false): EjercicioSesion => ({
   id: nuevoId(),
+  ejercicioId: null,
   nombre,
   series,
   repeticiones,
   carga,
+  descanso: '',
   notas: '',
   realizado,
 });
@@ -142,5 +144,8 @@ export function datosDeEjemplo(): BaseDeDatos {
     evaluaciones: [ev1, ev2],
     sesiones: [...sesionesCamila, proxCamila, s21, s22],
     adjuntos: [],
+    ejercicios: [],
+    plantillas: [],
+    programas: [],
   };
 }

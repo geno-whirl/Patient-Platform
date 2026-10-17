@@ -8,6 +8,7 @@ import { RepositorioSupabase } from './data/repositorioSupabase';
 import { supabase } from './data/supabase';
 import { ListaAdjuntos } from './pages/AdjuntosPage';
 import { AgendaPage } from './pages/AgendaPage';
+import { BibliotecaMarco, ListaBiblioteca, ListaPlantillas, ListaProgramas, PlantillaPage, ProgramaPage } from './pages/BibliotecaPage';
 import { CentrosPage } from './pages/CentrosPage';
 import { DatosPage } from './pages/DatosPage';
 import { EvaluacionPage } from './pages/EvaluacionPage';
@@ -26,6 +27,13 @@ function Rutas({ email, onSalir }: { email?: string; onSalir?: () => void }) {
         <Route path="agenda" element={<AgendaPage />} />
         <Route path="centros" element={<CentrosPage />} />
         <Route path="datos" element={<DatosPage />} />
+        <Route path="ejercicios" element={<BibliotecaMarco />}>
+          <Route index element={<ListaBiblioteca />} />
+          <Route path="plantillas" element={<ListaPlantillas />} />
+          <Route path="plantillas/:id" element={<PlantillaPage />} />
+          <Route path="programas" element={<ListaProgramas />} />
+          <Route path="programas/:id" element={<ProgramaPage />} />
+        </Route>
         <Route path="pacientes/:pid/imprimir" element={<ImprimirPage />} />
         <Route path="pacientes/:pid" element={<PacienteMarco />}>
           <Route index element={<ResumenPaciente />} />

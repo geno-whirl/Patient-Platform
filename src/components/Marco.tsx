@@ -18,6 +18,7 @@ export function Marco({ email, onSalir }: { email?: string; onSalir?: () => void
             Pacientes
           </NavLink>
           <NavLink to="/agenda">Agenda</NavLink>
+          <NavLink to="/ejercicios">Ejercicios</NavLink>
           <NavLink to="/centros">Centros</NavLink>
           <NavLink to="/datos">Datos e IA</NavLink>
         </nav>

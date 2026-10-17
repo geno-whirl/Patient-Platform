@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { InsigniaCentro, InsigniaEstadoPaciente } from '../components/Insignias';
 import { useDatos } from '../data/DatosContext';
+import { useEliminarPaciente } from './PacientePage';
 import { edad, fechaLegible, ETIQUETAS_ESTADO_PACIENTE } from '../domain/clinica';
 import { filtrarPacientes, resumenPaciente, todasLasEtiquetas, type Filtros } from '../domain/consultas';
 import { nuevoPaciente } from '../domain/factories';
@@ -9,6 +10,7 @@ import { ESTADOS_PACIENTE } from '../domain/schema';
 
 export function PacientesPage() {
   const { db, guardar, importar } = useDatos();
+  const eliminarConConfirmacion = useEliminarPaciente();
   const navegar = useNavigate();
   const [params, setParams] = useSearchParams();
   const filtros: Filtros = {
@@ -141,7 +143,16 @@ export function PacientesPage() {
             const anos = edad(p.identificacion.fechaNacimiento);
             const centro = db.centros.find((c) => c.id === p.centroId);
             return (
-              <li key={p.id}>
+              <li key={p.id} className="lista-pacientes__item">
+                <button
+                  type="button"
+                  className="boton boton--icono boton--peligro lista-pacientes__eliminar"
+                  title={`Eliminar a ${p.identificacion.nombre}`}
+                  aria-label={`Eliminar a ${p.identificacion.nombre}`}
+                  onClick={() => void eliminarConConfirmacion(p)}
+                >
+                  🗑
+                </button>
                 <Link to={`/pacientes/${p.id}`} className="tarjeta tarjeta-paciente">
                   <div className="tarjeta-paciente__cab">
                     <strong>{p.identificacion.nombre}</strong>

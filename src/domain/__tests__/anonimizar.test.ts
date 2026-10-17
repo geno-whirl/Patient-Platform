@@ -36,7 +36,7 @@ function base() {
     ruta: 'u/p/a1b2-rm.pdf',
     evaluacionId: null,
   };
-  const db: BaseDeDatos = { centros: [], pacientes: [p], ingresos: [i], evaluaciones: [], sesiones: [s], adjuntos: [adj] };
+  const db: BaseDeDatos = { centros: [], pacientes: [p], ingresos: [i], evaluaciones: [], sesiones: [s], adjuntos: [adj], ejercicios: [], plantillas: [], programas: [] };
   return { db, p };
 }
 

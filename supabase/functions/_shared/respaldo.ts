@@ -3,7 +3,7 @@
 import * as google from './google.ts';
 import { descargarAdjunto, guardarEstado, leerEstado, leerTabla, rpc } from './servicio.ts';
 
-const COLECCIONES = ['centros', 'pacientes', 'ingresos', 'evaluaciones', 'sesiones', 'adjuntos'] as const;
+const COLECCIONES = ['centros', 'pacientes', 'ingresos', 'evaluaciones', 'sesiones', 'adjuntos', 'ejercicios', 'plantillas', 'programas'] as const;
 // Debe coincidir con SCHEMA_VERSION de src/domain/schema.ts.
 const VERSION_ESQUEMA = 1;
 const RESPALDOS_A_CONSERVAR = 30;

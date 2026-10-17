@@ -722,14 +722,42 @@ a.tarjeta:hover {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  align-items: flex-start;
 }
+/* Columnas: [realizado] ejercicio · series · reps · carga · descanso · notas · acciones */
 .ejercicio {
   width: 100%;
   display: grid;
-  grid-template-columns: auto minmax(10rem, 3fr) repeat(3, minmax(4.5rem, 1fr)) minmax(8rem, 2fr) auto;
+  grid-template-columns: 1.6rem minmax(10rem, 3fr) minmax(3.5rem, 0.7fr) repeat(3, minmax(4.5rem, 1fr)) minmax(7rem, 2fr) auto;
   gap: 0.4rem;
   align-items: center;
+}
+.ejercicio--sin-check {
+  grid-template-columns: minmax(10rem, 3fr) minmax(3.5rem, 0.7fr) repeat(3, minmax(4.5rem, 1fr)) minmax(7rem, 2fr) auto;
+}
+.ejercicio--cab {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--texto-3);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.ejercicio--cab > span:last-child {
+  width: 8.6rem;
+}
+.ejercicio__nombre-celda {
+  position: relative;
+  min-width: 0;
+}
+.ejercicio__nombre-celda input {
+  padding-right: 1.8rem;
+}
+.ejercicio__origen {
+  position: absolute;
+  right: 0.45rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  opacity: 0.7;
 }
 .ejercicio--hecho .ejercicio__nombre {
   text-decoration: line-through;
@@ -744,25 +772,206 @@ a.tarjeta:hover {
   display: flex;
   gap: 0.2rem;
 }
-@media (max-width: 820px) {
+@media (max-width: 900px) {
+  .ejercicio--cab {
+    display: none;
+  }
   .ejercicio {
-    grid-template-columns: auto 1fr 1fr 1fr;
-    padding-bottom: 0.5rem;
+    grid-template-columns: 1.6rem repeat(4, minmax(0, 1fr));
+    padding-bottom: 0.6rem;
     border-bottom: 1px solid var(--borde);
   }
-  .ejercicio__nombre {
-    grid-column: span 3;
+  .ejercicio--sin-check {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  .ejercicio__notas {
-    grid-column: 2 / span 3;
+  /* Con casilla: la casilla queda en la 1ª columna y el resto se alinea a su derecha. */
+  .ejercicio:not(.ejercicio--sin-check) > :not(.ejercicio__check) {
+    grid-column-start: auto;
+  }
+  .ejercicio:not(.ejercicio--sin-check) .ejercicio__nombre-celda,
+  .ejercicio:not(.ejercicio--sin-check) .ejercicio__notas,
+  .ejercicio:not(.ejercicio--sin-check) .ejercicio__acciones {
+    grid-column: 2 / -1;
+  }
+  .ejercicio:not(.ejercicio--sin-check) > input:not(.ejercicio__notas):first-of-type {
+    grid-column-start: 2;
+  }
+  .ejercicio--sin-check .ejercicio__nombre-celda,
+  .ejercicio--sin-check .ejercicio__notas,
+  .ejercicio--sin-check .ejercicio__acciones {
+    grid-column: 1 / -1;
   }
   .ejercicio__acciones {
-    grid-column: 2 / span 3;
     justify-content: flex-end;
   }
-  .ejercicio > input:nth-of-type(2) {
-    grid-column: 2;
-  }
+}
+
+/* ───────── Biblioteca de ejercicios ───────── */
+
+.pila--compacta {
+  gap: 0.5rem;
+}
+.biblioteca {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.biblioteca__item {
+  padding: 0.5rem 0.75rem;
+}
+.biblioteca__item--abierto {
+  border-color: var(--primario);
+}
+.biblioteca__fila {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.biblioteca__resumen {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.75rem;
+  background: none;
+  border: none;
+  padding: 0.2rem 0;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+.biblioteca__equipo {
+  font-size: 0.82rem;
+}
+.biblioteca__ficha {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--borde);
+}
+.estrella {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--texto-3);
+  padding: 0.2rem;
+}
+.estrella--activa {
+  color: #d99a00;
+}
+.programa-sesiones {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.programa-sesiones > li {
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.programa-sesiones__cab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ───────── Modal y selectores ───────── */
+
+.modal {
+  border: none;
+  padding: 0;
+  border-radius: 14px;
+  width: min(760px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 20px 50px rgb(0 0 0 / 0.25);
+}
+.modal::backdrop {
+  background: rgb(10 20 18 / 0.45);
+}
+.modal__caja {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 2rem);
+}
+.modal__cab,
+.modal__pie {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+.modal__cab {
+  border-bottom: 1px solid var(--borde);
+  justify-content: space-between;
+}
+.modal__pie {
+  border-top: 1px solid var(--borde);
+}
+.modal__cuerpo {
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.selector-ejercicios {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.selector-ejercicios > li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.25rem;
+  border-bottom: 1px solid var(--borde);
+}
+.selector-ejercicios > li.seleccionado {
+  background: var(--primario-suave);
+}
+.selector-ejercicios__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.selector-ejercicios__opcion {
+  cursor: pointer;
+}
+.vista-previa {
+  margin: 0;
+  padding-left: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.9rem;
+}
+.lista-pacientes__item {
+  position: relative;
+}
+.lista-pacientes__eliminar {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  z-index: 1;
+  opacity: 0.55;
+}
+.lista-pacientes__eliminar:hover,
+.lista-pacientes__eliminar:focus-visible {
+  opacity: 1;
 }
 
 /* ───────── Resumen ───────── */

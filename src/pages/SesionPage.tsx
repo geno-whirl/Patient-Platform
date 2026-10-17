@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AreaTexto, CampoNumero, CampoTexto, enlazarTexto, Seccion, Seleccion, SelectorEva } from '../components/Campos';
+import { EditorEjercicios } from '../components/EditorEjercicios';
+import { SelectorPlan, type PlanCopiado } from '../components/SelectorPlan';
 import { useDatos } from '../data/DatosContext';
 import { useAutoguardado } from '../data/useAutoguardado';
 import { ETIQUETAS_ESTADO_SESION, fechaLegible } from '../domain/clinica';
 import { sesionesDe } from '../domain/consultas';
-import { nuevoId } from '../domain/factories';
-import { ESTADOS_SESION, type Ejercicio, type Sesion } from '../domain/schema';
+import { nuevaPlantilla, nuevoId } from '../domain/factories';
+import { ESTADOS_SESION, type Sesion } from '../domain/schema';
 import { BarraFormulario } from './comun';
 
 export function SesionPage() {
@@ -17,20 +20,36 @@ export function SesionPage() {
 }
 
 function FormSesion({ sesion }: { sesion: Sesion }) {
-  const { db, eliminar } = useDatos();
+  const { db, eliminar, guardar } = useDatos();
   const navegar = useNavigate();
-  const { borrador, fijar, estado, mensajeError, descartar } = useAutoguardado('sesiones', sesion);
+  const { borrador, fijar, actualizar, estado, mensajeError, descartar } = useAutoguardado('sesiones', sesion);
   const t = enlazarTexto(borrador, fijar);
   const ejercicios = borrador.planificacion.ejercicios;
-  const fijarEjercicios = (e: Ejercicio[]) => fijar('planificacion.ejercicios', e);
-  const editarEjercicio = (eid: string, cambios: Partial<Ejercicio>) =>
-    fijarEjercicios(ejercicios.map((e) => (e.id === eid ? { ...e, ...cambios } : e)));
-  const mover = (i: number, d: -1 | 1) => {
-    const j = i + d;
-    if (j < 0 || j >= ejercicios.length) return;
-    const copia = [...ejercicios];
-    [copia[i], copia[j]] = [copia[j], copia[i]];
-    fijarEjercicios(copia);
+  const [selectorPlan, setSelectorPlan] = useState(false);
+  const [aviso, setAviso] = useState('');
+
+  const copiarPlan = (plan: PlanCopiado, modo: 'reemplazar' | 'agregar') => {
+    const copiados = plan.ejercicios.map((e) => ({ ...e, id: nuevoId(), realizado: false }));
+    actualizar((d) => ({
+      ...d,
+      planificacion: {
+        objetivos: modo === 'reemplazar' || !d.planificacion.objetivos ? plan.objetivos : d.planificacion.objetivos,
+        notas: modo === 'reemplazar' || !d.planificacion.notas ? plan.notas : d.planificacion.notas,
+        ejercicios: modo === 'reemplazar' ? copiados : [...d.planificacion.ejercicios, ...copiados],
+      },
+    }));
+    setAviso(`Se copiaron ${copiados.length} ejercicios desde ${plan.origen}.`);
+  };
+
+  const guardarComoPlantilla = async () => {
+    const nombre = prompt('Nombre de la plantilla', borrador.planificacion.objetivos.slice(0, 60) || `Sesión ${borrador.numero}`);
+    if (!nombre?.trim()) return;
+    const p = nuevaPlantilla(nombre.trim());
+    p.objetivos = borrador.planificacion.objetivos;
+    p.notas = borrador.planificacion.notas;
+    p.ejercicios = ejercicios.map((e) => ({ ...e, id: nuevoId(), realizado: false }));
+    await guardar('plantillas', p);
+    setAviso(`Plantilla "${p.nombre}" guardada. Puedes editarla en Ejercicios → Plantillas.`);
   };
 
   const anteriores = sesionesDe(sesion.pacienteId, db).filter(
@@ -77,59 +96,31 @@ function FormSesion({ sesion }: { sesion: Sesion }) {
       <section className="seccion">
         <header className="seccion__cab">
           <h3>Planificación</h3>
+          <div className="acciones">
+            <button type="button" className="boton boton--chico" onClick={() => setSelectorPlan(true)}>
+              Usar plantilla / copiar sesión
+            </button>
+            <button type="button" className="boton boton--chico" onClick={guardarComoPlantilla} disabled={!ejercicios.length}>
+              Guardar como plantilla
+            </button>
+          </div>
         </header>
+        {borrador.programa && (
+          <p className="tenue">
+            Programa: <strong>{borrador.programa.nombre}</strong> · sesión {borrador.programa.numero} de {borrador.programa.total}
+          </p>
+        )}
         <div className="rejilla">
           <AreaTexto etiqueta="Objetivos de la sesión" {...t('planificacion.objetivos')} />
         </div>
-        <div className="ejercicios">
-          {ejercicios.map((e, i) => (
-            <div key={e.id} className={`ejercicio ${e.realizado ? 'ejercicio--hecho' : ''}`}>
-              <label className="ejercicio__check" title="Realizado">
-                <input type="checkbox" checked={e.realizado} onChange={(ev) => editarEjercicio(e.id, { realizado: ev.target.checked })} />
-              </label>
-              <input
-                className="ejercicio__nombre"
-                placeholder="Ejercicio / intervención"
-                value={e.nombre}
-                onChange={(ev) => editarEjercicio(e.id, { nombre: ev.target.value })}
-                aria-label="Ejercicio"
-              />
-              <input placeholder="Series" value={e.series} onChange={(ev) => editarEjercicio(e.id, { series: ev.target.value })} aria-label="Series" />
-              <input placeholder="Reps / tiempo" value={e.repeticiones} onChange={(ev) => editarEjercicio(e.id, { repeticiones: ev.target.value })} aria-label="Repeticiones" />
-              <input placeholder="Carga" value={e.carga} onChange={(ev) => editarEjercicio(e.id, { carga: ev.target.value })} aria-label="Carga" />
-              <input className="ejercicio__notas" placeholder="Notas / progresión" value={e.notas} onChange={(ev) => editarEjercicio(e.id, { notas: ev.target.value })} aria-label="Notas" />
-              <div className="ejercicio__acciones">
-                <button type="button" className="boton boton--icono" onClick={() => mover(i, -1)} aria-label="Subir" disabled={i === 0}>
-                  ↑
-                </button>
-                <button type="button" className="boton boton--icono" onClick={() => mover(i, 1)} aria-label="Bajar" disabled={i === ejercicios.length - 1}>
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  className="boton boton--icono boton--peligro"
-                  onClick={() => fijarEjercicios(ejercicios.filter((x) => x.id !== e.id))}
-                  aria-label="Quitar"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          ))}
-          <button
-            type="button"
-            className="boton boton--chico"
-            onClick={() =>
-              fijarEjercicios([...ejercicios, { id: nuevoId(), nombre: '', series: '', repeticiones: '', carga: '', notas: '', realizado: false }])
-            }
-          >
-            + Agregar ejercicio
-          </button>
-        </div>
+        {aviso && <p className="aviso aviso--ok">{aviso}</p>}
+        <EditorEjercicios ejercicios={ejercicios} onCambio={(e) => fijar('planificacion.ejercicios', e)} conRealizado />
         <div className="rejilla">
           <AreaTexto etiqueta="Notas de planificación" {...t('planificacion.notas')} />
         </div>
       </section>
+
+      <SelectorPlan abierto={selectorPlan} onCerrar={() => setSelectorPlan(false)} onElegir={copiarPlan} excluirSesionId={sesion.id} />
 
       <Seccion
         titulo="Registro de la sesión (SOAP)"

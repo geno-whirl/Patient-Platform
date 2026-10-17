@@ -7,10 +7,13 @@ basada en el formato de ingreso en papel (anamnesis próxima/remota, evaluación
 
 | Módulo | Contenido |
 |---|---|
-| **Pacientes** | Identificación, centro, etiquetas libres y estado (activo / en pausa / alta). Búsqueda sin tildes y filtros por centro, etiquetas y estado. |
+| **Pacientes** | Identificación, centro, etiquetas libres y estado (activo / en pausa / alta). Búsqueda sin tildes y filtros por centro, etiquetas y estado. Se pueden eliminar (con todos sus registros) desde la lista o la cabecera de la ficha. |
 | **Ingreso** | Anamnesis próxima y remota completas, con edad e IMC calculados automáticamente. |
 | **Evaluación** | ALICIA con EVA 0–10, **mapa del dolor interactivo** (4 vistas; región anatómica y lado del paciente automáticos), postural, movimiento, tejidos blandos, neurológica, sensoriomotor, palpación, funcional, pruebas especiales, diagnóstico kinesiológico, objetivos y plan. |
-| **Sesiones** | Planificación (objetivos y ejercicios con series/reps/carga) y registro SOAP con EVA de inicio y de término. La nueva sesión copia el plan de la anterior. |
+| **Sesiones** | Planificación (objetivos y ejercicios con series, repeticiones, carga, descanso y notas) y registro SOAP con EVA de inicio y de término. Los ejercicios se agregan desde la biblioteca con su dosis sugerida. Una sesión puede partir de una plantilla o copiar otra sesión (de cualquier paciente), y guardarse como plantilla. |
+| **Biblioteca de ejercicios** | **247 ejercicios precargados**: fuerza, potencia, pliometría, movilidad, flexibilidad, estabilidad/control motor, equilibrio/propiocepción, neurodinamia, acondicionamiento y respiratorio (42 con banda elástica o mini banda). Cada uno con dosis sugerida, claves técnicas, regiones y equipamiento. Búsqueda sin tildes, filtros, favoritos, edición, duplicar y archivar. |
+| **Plantillas de sesión** | Sesiones tipo reutilizables (7 de ejemplo: post-LCA, lumbalgia, manguito rotador, tobillo, adulto mayor, pliometría, tendinopatía rotuliana). |
+| **Programas de tratamiento** | Secuencias de sesiones por fases (6 de ejemplo, por ejemplo *Manguito rotador · 10 sesiones*). Al aplicarlo a un paciente, se eligen la fecha de inicio y los días de atención, y se crean todas las sesiones planificadas, que también aparecen en la agenda. |
 | **Adjuntos** | Fotos, exámenes (PDF), informes y videos por paciente, con fecha, categoría, evaluación relacionada y **descripción de hallazgos** (que es lo que lee un LLM). Desde el celular se puede usar “Tomar foto”. Las fotos grandes se reducen solas. |
 | **Ficha imprimible / PDF** | Documento de la ficha con secciones a elegir (ingreso, evaluaciones con mapa del dolor, sesiones, adjuntos e imágenes), opcionalmente anonimizado. Se guarda como PDF desde el diálogo de impresión. |
 | **Evolución y agenda** | Gráfico de EVA, próxima sesión e indicaciones vigentes; agenda por centro, más una vista de sesiones pasadas que quedaron sin registrar. |

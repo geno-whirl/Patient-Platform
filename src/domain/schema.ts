@@ -245,13 +245,19 @@ export const EvaluacionSchema = z
 
 export const ESTADOS_SESION = ['planificada', 'realizada', 'cancelada', 'no_asistio'] as const;
 
-export const EjercicioSchema = z
+export const EjercicioSesionSchema = z
   .object({
     id: z.string(),
+    ejercicioId: z
+      .string()
+      .nullable()
+      .default(null)
+      .describe('Id del EjercicioBiblioteca de origen (null = ejercicio escrito a mano)'),
     nombre: z.string().default('').describe('Ejercicio o intervención (ej: "Sentadilla búlgara", "Movilización grado III")'),
     series: texto('Series'),
-    repeticiones: texto('Repeticiones o tiempo'),
-    carga: texto('Carga / intensidad (kg, RPE, banda, etc.)'),
+    repeticiones: texto('Repeticiones o tiempo (ej: "12", "30 s", "8 c/lado")'),
+    carga: texto('Carga / intensidad (kg, RPE, color de banda, % 1RM, etc.)'),
+    descanso: texto('Descanso entre series (ej: "60 s")'),
     notas: texto('Indicaciones o progresión'),
     realizado: z.boolean().default(false).describe('Si se realizó en la sesión'),
   })
@@ -266,10 +272,20 @@ export const SesionSchema = z
     hora: texto('Hora de la sesión HH:MM'),
     numero: z.number().int().positive().describe('Número correlativo de sesión del paciente'),
     estado: z.enum(ESTADOS_SESION).default('planificada').describe('Estado de la sesión'),
+    programa: z
+      .object({
+        id: z.string().describe('Id del ProgramaTratamiento'),
+        nombre: z.string().describe('Nombre del programa al aplicarlo'),
+        numero: z.number().int().positive().describe('Posición de esta sesión dentro del programa (1 = primera)'),
+        total: z.number().int().positive().describe('Cantidad de sesiones del programa'),
+      })
+      .nullable()
+      .default(null)
+      .describe('Programa de tratamiento del que proviene la sesión (null = sesión suelta)'),
     planificacion: z
       .object({
         objetivos: texto('Objetivos de esta sesión'),
-        ejercicios: z.array(EjercicioSchema).default([]),
+        ejercicios: z.array(EjercicioSesionSchema).default([]),
         notas: texto('Notas de planificación'),
       })
       .prefault({})
@@ -313,6 +329,116 @@ export const AdjuntoSchema = z
   })
   .describe('Archivo adjunto a la ficha (foto, examen, informe). El contenido binario se guarda aparte.');
 
+// ───────────────────────── Biblioteca de ejercicios ─────────────────────────
+
+export const CATEGORIAS_EJERCICIO = [
+  'fuerza',
+  'potencia',
+  'pliometria',
+  'movilidad',
+  'flexibilidad',
+  'estabilidad',
+  'equilibrio',
+  'neurodinamia',
+  'acondicionamiento',
+  'respiratorio',
+] as const;
+
+export const REGIONES_EJERCICIO = [
+  'cervical',
+  'toracica',
+  'lumbar',
+  'core',
+  'hombro',
+  'codo_muneca_mano',
+  'cadera',
+  'rodilla',
+  'tobillo_pie',
+  'tren_superior',
+  'tren_inferior',
+  'cuerpo_completo',
+] as const;
+
+export const EQUIPAMIENTOS = [
+  'peso_corporal',
+  'banda_elastica',
+  'mini_banda',
+  'mancuerna',
+  'kettlebell',
+  'barra',
+  'polea',
+  'maquina',
+  'balon_medicinal',
+  'fitball',
+  'bosu',
+  'superficie_inestable',
+  'cajon_step',
+  'suspension',
+  'foam_roller',
+  'baston',
+  'disco_deslizante',
+  'escalera_agilidad',
+  'bicicleta',
+  'otro',
+] as const;
+
+export const EjercicioBibliotecaSchema = z
+  .object({
+    tipo: z.literal('ejercicio'),
+    ...meta,
+    nombre: z.string().min(1).describe('Nombre del ejercicio'),
+    categoria: z.enum(CATEGORIAS_EJERCICIO).describe('Cualidad que trabaja principalmente'),
+    regiones: z.array(z.enum(REGIONES_EJERCICIO)).default([]).describe('Regiones corporales que trabaja'),
+    equipamiento: z.array(z.enum(EQUIPAMIENTOS)).default([]).describe('Implementos necesarios'),
+    descripcion: texto('Ejecución y claves técnicas'),
+    series: texto('Series sugeridas'),
+    repeticiones: texto('Repeticiones o tiempo sugeridos'),
+    carga: texto('Carga / intensidad sugerida'),
+    descanso: texto('Descanso sugerido'),
+    etiquetas: z.array(z.string()).default([]).describe('Etiquetas libres (ej: "excéntrico", "isométrico", "unilateral")'),
+    favorito: z.boolean().default(false).describe('Marcado como favorito'),
+    predefinido: z.boolean().default(false).describe('Viene del catálogo base de la app'),
+    archivado: z.boolean().default(false).describe('Oculto de la biblioteca (los predefinidos se archivan en vez de borrarse)'),
+  })
+  .describe('Ejercicio de la biblioteca personal; se agrega a las sesiones como EjercicioSesion');
+
+export const PlantillaSesionSchema = z
+  .object({
+    tipo: z.literal('plantilla'),
+    ...meta,
+    nombre: z.string().min(1).describe('Nombre de la plantilla (ej: "Rodilla post-LCA · fase 1")'),
+    descripcion: texto('Para qué sirve, indicaciones y criterios de uso'),
+    etiquetas: z.array(z.string()).default([]),
+    objetivos: texto('Objetivos de la sesión que se copian al aplicarla'),
+    ejercicios: z.array(EjercicioSesionSchema).default([]),
+    notas: texto('Notas de planificación que se copian al aplicarla'),
+    predefinido: z.boolean().default(false).describe('Viene con la app como ejemplo'),
+  })
+  .describe('Plantilla de sesión: objetivos y ejercicios reutilizables');
+
+export const SesionProgramaSchema = z
+  .object({
+    id: z.string(),
+    titulo: texto('Título o fase de la sesión (ej: "Fase 1 · analgesia y rango")'),
+    objetivos: texto('Objetivos de la sesión'),
+    ejercicios: z.array(EjercicioSesionSchema).default([]),
+    notas: texto('Notas de planificación'),
+  })
+  .describe('Una sesión tipo dentro de un programa de tratamiento');
+
+export const ProgramaTratamientoSchema = z
+  .object({
+    tipo: z.literal('programa'),
+    ...meta,
+    nombre: z.string().min(1).describe('Nombre del programa (ej: "Manguito rotador · 10 sesiones")'),
+    descripcion: texto('Indicaciones, criterios de inclusión y de progresión'),
+    etiquetas: z.array(z.string()).default([]),
+    sesionesPorSemana: z.number().int().min(1).max(7).default(2).describe('Frecuencia sugerida'),
+    sesiones: z.array(SesionProgramaSchema).default([]).describe('Sesiones tipo, en orden'),
+    predefinido: z.boolean().default(false).describe('Viene con la app como ejemplo'),
+  })
+  .describe('Programa de tratamiento: secuencia de sesiones tipo que se aplica a un paciente');
+
 // ───────────────────────── Tipos y colecciones ─────────────────────────
 
 export type Centro = z.infer<typeof CentroSchema>;
@@ -323,7 +449,14 @@ export type Sesion = z.infer<typeof SesionSchema>;
 export type Adjunto = z.infer<typeof AdjuntoSchema>;
 export type MarcaDolor = z.infer<typeof MarcaDolorSchema>;
 export type PruebaEspecial = z.infer<typeof PruebaEspecialSchema>;
-export type Ejercicio = z.infer<typeof EjercicioSchema>;
+export type EjercicioSesion = z.infer<typeof EjercicioSesionSchema>;
+export type EjercicioBiblioteca = z.infer<typeof EjercicioBibliotecaSchema>;
+export type PlantillaSesion = z.infer<typeof PlantillaSesionSchema>;
+export type SesionPrograma = z.infer<typeof SesionProgramaSchema>;
+export type ProgramaTratamiento = z.infer<typeof ProgramaTratamientoSchema>;
+export type CategoriaEjercicio = (typeof CATEGORIAS_EJERCICIO)[number];
+export type RegionEjercicio = (typeof REGIONES_EJERCICIO)[number];
+export type Equipamiento = (typeof EQUIPAMIENTOS)[number];
 export type VistaCuerpo = (typeof VISTAS_CUERPO)[number];
 
 export const COLECCIONES = {
@@ -333,6 +466,9 @@ export const COLECCIONES = {
   evaluaciones: EvaluacionSchema,
   sesiones: SesionSchema,
   adjuntos: AdjuntoSchema,
+  ejercicios: EjercicioBibliotecaSchema,
+  plantillas: PlantillaSesionSchema,
+  programas: ProgramaTratamientoSchema,
 } as const;
 
 export type Coleccion = keyof typeof COLECCIONES;
@@ -344,6 +480,9 @@ export interface RegistroPorColeccion {
   evaluaciones: Evaluacion;
   sesiones: Sesion;
   adjuntos: Adjunto;
+  ejercicios: EjercicioBiblioteca;
+  plantillas: PlantillaSesion;
+  programas: ProgramaTratamiento;
 }
 
 export type BaseDeDatos = { [K in Coleccion]: RegistroPorColeccion[K][] };
@@ -360,6 +499,9 @@ export const ExportacionSchema = z
     evaluaciones: z.array(EvaluacionSchema),
     sesiones: z.array(SesionSchema),
     adjuntos: z.array(AdjuntoSchema).default([]).describe('Metadatos de adjuntos (los archivos no van en el respaldo JSON)'),
+    ejercicios: z.array(EjercicioBibliotecaSchema).default([]).describe('Biblioteca de ejercicios'),
+    plantillas: z.array(PlantillaSesionSchema).default([]).describe('Plantillas de sesión'),
+    programas: z.array(ProgramaTratamientoSchema).default([]).describe('Programas de tratamiento'),
   })
   .describe('Respaldo completo de la plataforma kinesiológica');
 

@@ -185,7 +185,9 @@ function fichaSesion(s: Sesion): RegistroFicha {
   return {
     tipo: 'sesion',
     id: s.id,
-    titulo: `Sesión ${s.numero} — ${s.fecha}${s.hora ? ` ${s.hora}` : ''} (${ETIQUETAS_ESTADO_SESION[s.estado]})${eva}`,
+    titulo:
+      `Sesión ${s.numero} — ${s.fecha}${s.hora ? ` ${s.hora}` : ''} (${ETIQUETAS_ESTADO_SESION[s.estado]})${eva}` +
+      (s.programa ? ` · ${s.programa.nombre} ${s.programa.numero}/${s.programa.total}` : ''),
     bloques: bloques([
       { titulo: '', campos: campos([['Objetivos de la sesión', s.planificacion.objetivos], ['Notas de planificación', s.planificacion.notas]]) },
       {
@@ -195,7 +197,7 @@ function fichaSesion(s: Sesion): RegistroFicha {
           .map(
             (x) =>
               `${x.realizado ? '[x]' : '[ ]'} ${x.nombre}` +
-              [x.series && `${x.series} series`, x.repeticiones && `${x.repeticiones} reps`, x.carga]
+              [x.series && `${x.series} series`, x.repeticiones && `${x.repeticiones} reps`, x.carga, x.descanso && `descanso ${x.descanso}`]
                 .filter(Boolean)
                 .map((t) => ` · ${t}`)
                 .join('') +

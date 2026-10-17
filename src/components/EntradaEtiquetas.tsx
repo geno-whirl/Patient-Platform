@@ -6,10 +6,12 @@ export function EntradaEtiquetas({
   etiquetas,
   onCambio,
   sugerencias,
+  ayuda = 'Ej: rodilla, deportista, post-operatorio, fonasa. Enter para agregar.',
 }: {
   etiquetas: string[];
   onCambio: (e: string[]) => void;
   sugerencias: string[];
+  ayuda?: string;
 }) {
   const [texto, setTexto] = useState('');
   const id = useId();
@@ -57,7 +59,7 @@ export function EntradaEtiquetas({
           ))}
         </datalist>
       </div>
-      <small className="ayuda">Ej: rodilla, deportista, post-operatorio, fonasa. Enter para agregar.</small>
+      <small className="ayuda">{ayuda}</small>
     </div>
   );
 }
