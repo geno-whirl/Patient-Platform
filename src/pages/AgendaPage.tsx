@@ -3,12 +3,14 @@ import { InsigniaCentro, InsigniaEstadoSesion } from '../components/Insignias';
 import { useDatos } from '../data/DatosContext';
 import { fechaLegible } from '../domain/clinica';
 import { hoy } from '../domain/factories';
+import { OpcionesCentros } from '../components/OpcionesCentros';
 
 /** Sesiones planificadas de todos los pacientes, agrupadas por día. */
 export function AgendaPage() {
   const { db } = useDatos();
   const [params, setParams] = useSearchParams();
-  const centroId = params.get('centro') ?? '';
+  const centroParam = params.get('centro') ?? '';
+  const centroId = db.centros.some((c) => c.id === centroParam) ? centroParam : '';
   const verPasadas = params.get('pasadas') === '1';
   const fechaHoy = hoy();
   const pacientes = new Map(db.pacientes.map((p) => [p.id, p]));
@@ -41,11 +43,7 @@ export function AgendaPage() {
       <div className="filtros">
         <select value={centroId} onChange={(e) => fijar('centro', e.target.value)} aria-label="Filtrar por centro">
           <option value="">Todos los centros</option>
-          {db.centros.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}
-            </option>
-          ))}
+          <OpcionesCentros centros={db.centros} conArchivados />
         </select>
         <div className="segmentado" role="group" aria-label="Periodo">
           <button className={!verPasadas ? 'activo' : ''} onClick={() => fijar('pasadas', '')}>

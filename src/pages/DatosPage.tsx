@@ -6,6 +6,7 @@ import { descargar } from '../domain/archivos';
 import { hoy } from '../domain/factories';
 import { pacienteAMarkdown } from '../domain/markdown';
 import { ExportacionSchema } from '../domain/schema';
+import { OpcionesCentros } from '../components/OpcionesCentros';
 
 export function DatosPage() {
   const { db, modo, exportar, importar } = useDatos();
@@ -50,11 +51,7 @@ export function DatosPage() {
         <div className="filtros">
           <select value={centroId} onChange={(e) => setCentroId(e.target.value)} aria-label="Centro">
             <option value="">Todos los centros</option>
-            {db.centros.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nombre}
-              </option>
-            ))}
+            <OpcionesCentros centros={db.centros} conArchivados />
           </select>
           <label className="casilla">
             <input type="checkbox" checked={soloActivos} onChange={(e) => setSoloActivos(e.target.checked)} /> Solo activos

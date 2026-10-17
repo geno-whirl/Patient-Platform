@@ -7,15 +7,18 @@ import { edad, fechaLegible, ETIQUETAS_ESTADO_PACIENTE } from '../domain/clinica
 import { filtrarPacientes, resumenPaciente, todasLasEtiquetas, type Filtros } from '../domain/consultas';
 import { nuevoPaciente } from '../domain/factories';
 import { ESTADOS_PACIENTE } from '../domain/schema';
+import { OpcionesCentros } from '../components/OpcionesCentros';
 
 export function PacientesPage() {
   const { db, guardar, importar } = useDatos();
   const eliminarConConfirmacion = useEliminarPaciente();
   const navegar = useNavigate();
   const [params, setParams] = useSearchParams();
+  const centroParam = params.get('centro') ?? '';
   const filtros: Filtros = {
     texto: params.get('q') ?? '',
-    centroId: params.get('centro') ?? '',
+    // Un centro eliminado no debe dejar un filtro "fantasma" imposible de quitar.
+    centroId: centroParam === 'ninguno' || db.centros.some((c) => c.id === centroParam) ? centroParam : '',
     etiquetas: params.get('etiquetas')?.split(',').filter(Boolean) ?? [],
     estado: params.get('estado') ?? 'activo',
   };
@@ -42,7 +45,10 @@ export function PacientesPage() {
     navegar(`/pacientes/${p.id}/datos`);
   };
 
-  const etiquetas = todasLasEtiquetas(db);
+  // Las etiquetas filtradas se muestran siempre, aunque ya ningún paciente las tenga, para poder quitarlas.
+  const etiquetas = [...new Set([...todasLasEtiquetas(db), ...filtros.etiquetas])].sort();
+  const hayFiltros = !!(filtros.texto || filtros.centroId || filtros.etiquetas.length || filtros.estado !== 'activo');
+  const limpiarFiltros = () => setParams(new URLSearchParams(), { replace: true });
   const lista = filtrarPacientes(db.pacientes, db, filtros).sort((a, b) =>
     a.identificacion.nombre.localeCompare(b.identificacion.nombre, 'es'),
   );
@@ -64,12 +70,8 @@ export function PacientesPage() {
           aria-label="Nombre del nuevo paciente"
         />
         <select value={centroNuevo} onChange={(e) => setCentroNuevo(e.target.value)} aria-label="Centro">
-          <option value="">{db.centros.length ? 'Centro…' : 'Sin centros (créalos en Centros)'}</option>
-          {db.centros.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}
-            </option>
-          ))}
+          <option value="">{db.centros.some((c) => !c.archivado) ? 'Centro…' : 'Sin centros (créalos en Centros)'}</option>
+          <OpcionesCentros centros={db.centros} />
         </select>
         <button className="boton boton--primario" type="submit" disabled={!nombreNuevo.trim()}>
           + Nuevo paciente
@@ -86,11 +88,7 @@ export function PacientesPage() {
         />
         <select value={filtros.centroId} onChange={(e) => fijarFiltro('centro', e.target.value)} aria-label="Filtrar por centro">
           <option value="">Todos los centros</option>
-          {db.centros.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}
-            </option>
-          ))}
+          <OpcionesCentros centros={db.centros} conArchivados />
           <option value="ninguno">Sin centro</option>
         </select>
         <select value={filtros.estado} onChange={(e) => fijarFiltro('estado', e.target.value)} aria-label="Filtrar por estado">
@@ -102,7 +100,7 @@ export function PacientesPage() {
           ))}
         </select>
       </div>
-      {etiquetas.length > 0 && (
+      {(etiquetas.length > 0 || hayFiltros) && (
         <div className="chips">
           {etiquetas.map((t) => (
             <button
@@ -113,8 +111,14 @@ export function PacientesPage() {
               onClick={() => alternarEtiqueta(t)}
             >
               #{t}
+              {filtros.etiquetas.includes(t) && <span aria-hidden> ×</span>}
             </button>
           ))}
+          {hayFiltros && (
+            <button type="button" className="enlace" onClick={limpiarFiltros}>
+              Limpiar filtros
+            </button>
+          )}
         </div>
       )}
 
@@ -133,7 +137,14 @@ export function PacientesPage() {
               </div>
             </>
           ) : (
-            'Ningún paciente coincide con los filtros.'
+            <>
+              <span>Ningún paciente coincide con los filtros.</span>
+              <div>
+                <button className="boton" onClick={limpiarFiltros}>
+                  Limpiar filtros
+                </button>
+              </div>
+            </>
           )}
         </div>
       ) : (

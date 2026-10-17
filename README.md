@@ -16,6 +16,7 @@ basada en el formato de ingreso en papel (anamnesis próxima/remota, evaluación
 | **Programas de tratamiento** | Secuencias de sesiones por fases (6 de ejemplo, por ejemplo *Manguito rotador · 10 sesiones*). Al aplicarlo a un paciente, se eligen la fecha de inicio y los días de atención, y se crean todas las sesiones planificadas, que también aparecen en la agenda. |
 | **Adjuntos** | Fotos, exámenes (PDF), informes y videos por paciente, con fecha, categoría, evaluación relacionada y **descripción de hallazgos** (que es lo que lee un LLM). Desde el celular se puede usar “Tomar foto”. Las fotos grandes se reducen solas. |
 | **Ficha imprimible / PDF** | Documento de la ficha con secciones a elegir (ingreso, evaluaciones con mapa del dolor, sesiones, adjuntos e imágenes), opcionalmente anonimizado. Se guarda como PDF desde el diálogo de impresión. |
+| **Centros** | Varios lugares de atención con color. Un centro se puede **archivar** (deja de ofrecerse para pacientes nuevos y conserva su historial) o **eliminar**, eligiendo qué hacer con sus pacientes: moverlos a otro centro, dejarlos sin centro o eliminarlos. |
 | **Evolución y agenda** | Gráfico de EVA, próxima sesión e indicaciones vigentes; agenda por centro, más una vista de sesiones pasadas que quedaron sin registrar. |
 | **Datos e IA** | Fichas en Markdown para un LLM (**anonimizadas** por defecto), respaldo JSON con importación, esquema de datos y **respaldo automático en Google Drive**. |
 

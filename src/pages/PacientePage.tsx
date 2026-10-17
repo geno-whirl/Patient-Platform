@@ -269,7 +269,9 @@ function FormDatosPaciente({ paciente }: { paciente: Paciente }) {
           ancho="medio"
           valor={borrador.centroId ?? ''}
           vacio="Sin centro"
-          opciones={db.centros.map((c) => [c.id, c.nombre] as const)}
+          opciones={db.centros
+            .filter((c) => !c.archivado || c.id === borrador.centroId)
+            .map((c) => [c.id, c.archivado ? `${c.nombre} (archivado)` : c.nombre] as const)}
           onCambio={(v) => fijar('centroId', v || null)}
         />
         <Seleccion

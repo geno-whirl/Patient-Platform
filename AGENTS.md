@@ -33,6 +33,7 @@ Hay tres formatos con la misma información:
   `programa` (o `null`) indica el programa de tratamiento del que proviene: `{ id, nombre, numero, total }`, ej. sesión 4 de 10.
   `estado`: `planificada` | `realizada` | `cancelada` | `no_asistio`. Solo las sesiones realizadas cuentan como evolución.
 - `paciente.estado`: `activo` | `en_pausa` | `alta`. `etiquetas[]` son palabras en minúscula con guiones.
+- `centro.archivado`: el centro ya no se usa para pacientes nuevos, pero sus pacientes e historial siguen vigentes.
 - **Biblioteca** (`ejercicios`): `nombre`, `categoria` (fuerza, potencia, pliometria, movilidad, flexibilidad, estabilidad,
   equilibrio, neurodinamia, acondicionamiento, respiratorio), `regiones[]`, `equipamiento[]`, dosis sugerida y `descripcion`.
   `predefinido` = viene del catálogo base; `archivado` = oculto (no se usa más).

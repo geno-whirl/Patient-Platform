@@ -44,6 +44,10 @@ export const CentroSchema = z
     direccion: texto('Dirección del centro'),
     color: z.string().default('#0f766e').describe('Color de la etiqueta del centro en la interfaz (hex)'),
     notas: texto('Notas libres sobre el centro'),
+    archivado: z
+      .boolean()
+      .default(false)
+      .describe('Centro inactivo: no se ofrece para pacientes nuevos, pero conserva su historial'),
   })
   .describe('Centro o lugar donde se atienden pacientes. Un paciente pertenece a un centro.');
 

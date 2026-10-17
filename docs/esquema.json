@@ -54,6 +54,11 @@
             "default": "",
             "description": "Notas libres sobre el centro",
             "type": "string"
+          },
+          "archivado": {
+            "default": false,
+            "description": "Centro inactivo: no se ofrece para pacientes nuevos, pero conserva su historial",
+            "type": "boolean"
           }
         },
         "required": [
