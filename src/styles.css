@@ -1644,3 +1644,14 @@ input[type='radio'] {
   border-radius: var(--radio);
   background: var(--superficie-2);
 }
+.pie {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 1rem 1.5rem;
+  font-size: 0.78rem;
+  color: var(--texto-3);
+  text-align: center;
+}
+.pie a {
+  color: inherit;
+}

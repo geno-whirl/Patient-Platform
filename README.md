@@ -3,6 +3,9 @@
 App web para el **ingreso, evaluación, planificación y seguimiento** de pacientes de kinesiología,
 basada en el formato de ingreso en papel (anamnesis próxima/remota, evaluación con ALICIA y mapa del dolor).
 
+> **Aviso:** herramienta de apoyo al registro clínico. No es un dispositivo médico, no entrega diagnósticos y no
+> reemplaza el criterio profesional. Ver [Aviso de uso](#aviso-de-uso) y [Licencia](#licencia) (AGPL-3.0).
+
 ## Qué incluye
 
 | Módulo | Contenido |
@@ -196,4 +199,35 @@ En **Datos e IA → Respaldo**:
   - Desde un `.zip` restaura también los archivos de los adjuntos.
   - Funciona entre modos: un respaldo de modo local se puede importar en una cuenta de Supabase y al revés.
   - El catálogo base no se duplica, y reimportar el mismo respaldo actualiza en vez de duplicar.
+
+## Aviso de uso
+
+- **No es un dispositivo médico.** Es una herramienta para registrar y organizar la información clínica. No diagnostica ni
+  indica tratamientos. Los catálogos de ejercicios, plantillas y programas son ejemplos de referencia: las decisiones
+  clínicas, dosis y progresiones son responsabilidad del profesional tratante.
+- **Datos de pacientes.** El repositorio contiene solo código. Los datos clínicos viven en tu proyecto de Supabase o en
+  tu navegador (modo local), nunca en GitHub.
+- **Responsabilidad de quien la usa.** Quien instala la plataforma y registra pacientes es responsable del tratamiento de
+  esos datos según la normativa aplicable (en Chile, Ley 20.584 sobre derechos y deberes de los pacientes y Ley 19.628
+  sobre protección de la vida privada): consentimiento, confidencialidad, acceso y resguardo.
+- **IA.** Las fichas exportadas para un LLM son anonimizadas por defecto, pero la anonimización automática no es perfecta.
+  Revisa antes de compartir. Las respuestas de un LLM pueden ser incorrectas y no reemplazan el juicio clínico.
+- **Sin garantía.** El software se entrega "tal cual", sin garantía de ningún tipo (ver secciones 15 y 16 de la licencia).
+
+## Licencia
+
+Copyright (C) 2026 geno-whirl
+
+Este programa es software libre: puedes redistribuirlo y/o modificarlo bajo los términos de la
+**GNU Affero General Public License, versión 3** (`AGPL-3.0-only`), publicada por la Free Software Foundation.
+Se distribuye con la esperanza de que sea útil, pero **sin ninguna garantía**, ni siquiera la garantía implícita de
+comerciabilidad o idoneidad para un propósito particular. El texto completo está en [`LICENSE`](LICENSE).
+
+En la práctica:
+- Puedes usar, estudiar, modificar y redistribuir la plataforma, incluso con fines comerciales.
+- Si distribuyes una versión modificada **u ofreces una versión modificada como servicio web** (por ejemplo, a otros
+  profesionales o clínicas), debes publicar su código fuente completo bajo la misma licencia. La app muestra el enlace
+  "Código fuente" en el pie de página: apúntalo a tu repositorio con la variable `VITE_URL_CODIGO`.
+- Las dependencias (React, Supabase, Zod, fflate, idb-keyval…) mantienen sus propias licencias (MIT y Apache-2.0),
+  compatibles con la AGPL-3.0.
 
