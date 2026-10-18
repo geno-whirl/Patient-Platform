@@ -1631,3 +1631,16 @@ input[type='radio'] {
   height: 1.1rem;
   flex: none;
 }
+.aviso--aviso {
+  background: var(--aviso-suave);
+  color: var(--aviso);
+  border-color: transparent;
+}
+.estado-almacenamiento {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radio);
+  background: var(--superficie-2);
+}

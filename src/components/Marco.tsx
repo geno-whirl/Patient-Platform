@@ -1,11 +1,26 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
+import { solicitarPersistencia } from '../data/almacenamiento';
 import { useDatos } from '../data/DatosContext';
 import { BotonInstalar, useEnLinea } from './EstadoApp';
 import { recurso } from '../rutaBase';
 
 export function Marco({ email, onSalir }: { email?: string; onSalir?: () => void }) {
-  const { modo, cargando, error } = useDatos();
+  const { db, modo, cargando, error } = useDatos();
   const enLinea = useEnLinea();
+  const hayPacientes = db.pacientes.length > 0;
+
+  // Modo local: en cuanto hay datos que perder, pedir al navegador que no los borre por su cuenta.
+  useEffect(() => {
+    if (modo !== 'local' || !hayPacientes) return;
+    try {
+      if (sessionStorage.getItem('kine-persistencia-pedida')) return;
+      sessionStorage.setItem('kine-persistencia-pedida', '1');
+    } catch {
+      // sin sessionStorage: igual se pide, a lo más una vez por carga
+    }
+    void solicitarPersistencia();
+  }, [modo, hayPacientes]);
   return (
     <div className="app">
       <header className="barra">

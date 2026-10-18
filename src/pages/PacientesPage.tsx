@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { InsigniaCentro, InsigniaEstadoPaciente } from '../components/Insignias';
+import { diasDesdeRespaldo } from '../data/almacenamiento';
 import { useDatos } from '../data/DatosContext';
 import { useEliminarPaciente } from './PacientePage';
 import { edad, fechaLegible, ETIQUETAS_ESTADO_PACIENTE } from '../domain/clinica';
@@ -10,7 +11,8 @@ import { ESTADOS_PACIENTE } from '../domain/schema';
 import { OpcionesCentros } from '../components/OpcionesCentros';
 
 export function PacientesPage() {
-  const { db, guardar, importar } = useDatos();
+  const { db, modo, guardar, importar } = useDatos();
+  const diasRespaldo = diasDesdeRespaldo();
   const eliminarConConfirmacion = useEliminarPaciente();
   const navegar = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -62,6 +64,13 @@ export function PacientesPage() {
         </span>
       </div>
 
+      {modo === 'local' && db.pacientes.length > 0 && (diasRespaldo == null || diasRespaldo > 7) && (
+        <p className="aviso aviso--aviso">
+          Modo local: tus datos y adjuntos están solo en este navegador.{' '}
+          {diasRespaldo == null ? 'Aún no descargas un respaldo completo.' : `Tu último respaldo completo fue hace ${diasRespaldo} días.`}{' '}
+          <Link to="/datos">Descargar respaldo (.zip)</Link>
+        </p>
+      )}
       <form className="tarjeta nuevo-paciente" onSubmit={crear}>
         <input
           placeholder="Nombre del nuevo paciente"

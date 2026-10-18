@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { nombreArchivo } from '../domain/archivos';
 import { ahoraIso, hoy, nuevoId } from '../domain/factories';
 import { prepararArchivo } from '../domain/imagenes';
+import { adaptarIdsAlDestino } from '../domain/importacion';
 import {
   COLECCIONES,
   SCHEMA_VERSION,
@@ -25,12 +26,20 @@ interface Datos {
   subirAdjunto(pacienteId: string, archivo: File, datos?: Partial<Adjunto>): Promise<Adjunto>;
   leerArchivo(ruta: string): Promise<Blob>;
   exportar(): Exportacion;
-  importar(datos: unknown): Promise<{ total: number }>;
+  /** Importa un respaldo; `archivos` (por id de adjunto) restaura también el contenido de los adjuntos. */
+  importar(datos: unknown, archivos?: Map<string, Blob>): Promise<{ total: number; archivos: number }>;
   /** Agrega a la biblioteca los ejercicios, plantillas y programas del catálogo base que falten. */
   cargarCatalogo(): Promise<{ ejercicios: number; plantillas: number; programas: number }>;
 }
 
 const DatosCtx = createContext<Datos | null>(null);
+
+/** Clave de almacenamiento de un adjunto: <paciente>/<id>-<nombre-normalizado>.<ext> */
+function claveAdjunto(pacienteId: string, id: string, nombre: string): string {
+  const extension = nombre.includes('.') ? nombre.slice(nombre.lastIndexOf('.')).toLowerCase() : '';
+  const base = nombreArchivo(nombre.replace(/\.[^.]+$/, '')) || 'archivo';
+  return `${pacienteId}/${id}-${base}${extension}`;
+}
 
 export function DatosProvider({ repositorio, children }: { repositorio: Repositorio; children: ReactNode }) {
   const [db, setDb] = useState<BaseDeDatos>(baseVacia);
@@ -150,9 +159,7 @@ export function DatosProvider({ repositorio, children }: { repositorio: Reposito
     async (pacienteId: string, original: File, datos: Partial<Adjunto> = {}) => {
       const archivo = await prepararArchivo(original);
       const id = nuevoId();
-      const extension = archivo.name.includes('.') ? archivo.name.slice(archivo.name.lastIndexOf('.')) : '';
-      const base = nombreArchivo(archivo.name.replace(/\.[^.]+$/, '')) || 'archivo';
-      const ruta = await repositorio.subirArchivo(`${pacienteId}/${id}-${base}${extension.toLowerCase()}`, archivo);
+      const ruta = await repositorio.subirArchivo(claveAdjunto(pacienteId, id, archivo.name), archivo);
       const t = ahoraIso();
       try {
         return await guardar('adjuntos', {
@@ -193,12 +200,27 @@ export function DatosProvider({ repositorio, children }: { repositorio: Reposito
 
   /** Importa un respaldo: agrega o reemplaza registros por id (no borra nada). */
   const importar = useCallback(
-    async (datos: unknown) => {
-      const entrada = datos as Partial<Record<Coleccion, unknown[]>>;
+    async (datos: unknown, archivos?: Map<string, Blob>) => {
+      const existentes = new Set(Object.values(db).flatMap((lista) => (lista as { id: string }[]).map((r) => r.id)));
+      const adaptado = await adaptarIdsAlDestino(datos as Partial<Record<string, unknown[]>>, repositorio.semillaIds, existentes);
+      const entrada = adaptado.entrada as Partial<Record<Coleccion, unknown[]>>;
+      // Los archivos del .zip vienen por id original del adjunto.
+      const idOriginal = new Map([...adaptado.ids].map(([viejo, nuevo]) => [nuevo, viejo]));
       let total = 0;
+      let restaurados = 0;
       const nuevo = { ...db };
       for (const c of Object.keys(COLECCIONES) as Coleccion[]) {
         const registros = (entrada[c] ?? []).map((r) => COLECCIONES[c].parse(r));
+        if (c === 'adjuntos' && archivos?.size) {
+          // El archivo se guarda en el almacenamiento actual (local o Supabase) y la ruta se actualiza,
+          // así un respaldo hecho en modo local se puede restaurar en Supabase y viceversa.
+          for (const a of registros as Adjunto[]) {
+            const contenido = archivos.get(a.id) ?? archivos.get(idOriginal.get(a.id) ?? '');
+            if (!contenido) continue;
+            a.ruta = await repositorio.subirArchivo(claveAdjunto(a.pacienteId, a.id, a.nombreArchivo), contenido);
+            restaurados++;
+          }
+        }
         // Restaurar un respaldo es explícito: lo importado vuelve a ser editable.
         registros.forEach((r) => eliminados.current.delete(r.id));
         await repositorio.guardarVarios(c, registros as never);
@@ -207,7 +229,7 @@ export function DatosProvider({ repositorio, children }: { repositorio: Reposito
         total += registros.length;
       }
       setDb(nuevo);
-      return { total };
+      return { total, archivos: restaurados };
     },
     [db, repositorio],
   );

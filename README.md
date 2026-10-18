@@ -18,7 +18,7 @@ basada en el formato de ingreso en papel (anamnesis próxima/remota, evaluación
 | **Ficha imprimible / PDF** | Documento de la ficha con secciones a elegir (ingreso, evaluaciones con mapa del dolor, sesiones, adjuntos e imágenes), opcionalmente anonimizado. Se guarda como PDF desde el diálogo de impresión. |
 | **Centros** | Varios lugares de atención con color. Un centro se puede **archivar** (deja de ofrecerse para pacientes nuevos y conserva su historial) o **eliminar**, eligiendo qué hacer con sus pacientes: moverlos a otro centro, dejarlos sin centro o eliminarlos. |
 | **Evolución y agenda** | Gráfico de EVA, próxima sesión e indicaciones vigentes; agenda por centro, más una vista de sesiones pasadas que quedaron sin registrar. |
-| **Datos e IA** | Fichas en Markdown para un LLM (**anonimizadas** por defecto), respaldo JSON con importación, esquema de datos y **respaldo automático en Google Drive**. |
+| **Datos e IA** | Fichas en Markdown para un LLM (**anonimizadas** por defecto), **respaldo completo .zip con adjuntos** (o solo datos .json) e importación, esquema de datos y **respaldo automático en Google Drive** (con Supabase). |
 
 Todo se guarda solo mientras escribes. Además es una **app instalable (PWA)**: se agrega a la pantalla de inicio del celular, tablet o computador, se abre en su propia ventana y funciona sin conexión.
 
@@ -36,7 +36,9 @@ Navegador (React)  ──►  Supabase
 
 - **Datos pensados para agentes:** cada registro es un documento JSON validado con el esquema de `src/domain/schema.ts`. Además hay columnas y vistas SQL (`v_pacientes`, `v_evolucion_eva`) para consultarlo. Detalle en [`AGENTS.md`](AGENTS.md).
 - **Respaldo en Drive:** corre en el servidor, así que funciona con la app cerrada. Usa el permiso `drive.file`: la app solo ve los archivos que ella misma crea, nunca el resto de tu Drive. Guarda un JSON completo por respaldo (conserva los últimos 30) más una copia de cada adjunto.
-- **Modo local:** sin configurar Supabase, la app guarda todo en el navegador (IndexedDB). Sirve para probarla.
+- **Modo local:** sin configurar Supabase, la app guarda todo en el navegador (IndexedDB). Sirve para probarla. Los datos y adjuntos existen solo en ese navegador, así que la app:
+  - pide al navegador **almacenamiento persistente**, para que no los borre por falta de espacio;
+  - recuerda descargar un **respaldo completo (.zip)** si nunca se hizo o pasó más de una semana.
 
 ```
 src/domain/       modelo (schema.ts), ficha estructurada, Markdown, anonimización, mapa del dolor
@@ -182,3 +184,16 @@ Estos son **datos sensibles de salud** (en Chile, Ley 20.584 y Ley 19.628). La p
 - respalda solo en tu propio Drive.
 
 Recomendado: activar la verificación en dos pasos en Google y en Supabase, y no compartir fichas sin anonimizar.
+
+## Respaldos manuales
+
+En **Datos e IA → Respaldo**:
+
+- **Respaldo completo (.zip, con adjuntos):** contiene `respaldo.json` (todos los datos, formato en `docs/esquema.json`), la carpeta `adjuntos/<id>/<archivo>` con cada foto o examen, y un `LEEME.txt`.
+- **Solo datos (.json):** el mismo `respaldo.json`, sin los archivos.
+- **Importar respaldo…** acepta `.zip` o `.json`:
+  - Agrega o actualiza registros y no borra nada.
+  - Desde un `.zip` restaura también los archivos de los adjuntos.
+  - Funciona entre modos: un respaldo de modo local se puede importar en una cuenta de Supabase y al revés.
+  - El catálogo base no se duplica, y reimportar el mismo respaldo actualiza en vez de duplicar.
+

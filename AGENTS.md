@@ -12,9 +12,10 @@ Hay tres formatos con la misma información:
    así que si un dato no aparece significa “no registrado”, no “normal”.
    Si el título es un código como `P-3F2A9C`, la ficha está **anonimizada**: ese código reemplaza al nombre
    del paciente en todo el texto, y `[RUT]`, `[email]` y `[teléfono]` marcan datos que se quitaron.
-2. **JSON de respaldo** (descarga manual o carpeta “Kine — respaldos” en Google Drive): objeto
+2. **JSON de respaldo** (descarga manual, `respaldo.json` dentro del respaldo `.zip`, o carpeta “Kine — respaldos” en Google Drive): objeto
    `{ formato, versionEsquema, exportadoEn, centros[], pacientes[], ingresos[], evaluaciones[], sesiones[], adjuntos[], ejercicios[], plantillas[], programas[] }`.
    El esquema completo, con descripciones, está en `docs/esquema.json`.
+   En el `.zip`, el archivo de cada adjunto está en `adjuntos/<id del adjunto>/<nombre original>`.
 3. **SQL (Supabase)**: tablas `centros`, `pacientes`, `ingresos`, `evaluaciones`, `sesiones`, `adjuntos`, `ejercicios`, `plantillas` y `programas`, cada una con `data jsonb`
    (el mismo documento del JSON) y columnas de conveniencia (`nombre`, `centro_id`, `paciente_id`, `fecha`, `estado` y `etiquetas`).
    Además hay vistas `v_pacientes` (resumen de seguimiento), `v_evolucion_eva` (EVA de inicio y término por sesión realizada)
@@ -83,4 +84,7 @@ group by 1, 2;
   Si agregas una colección, súmala también a `COLECCIONES` en `supabase/functions/_shared/respaldo.ts`.
 - El catálogo base (ejercicios, plantillas y programas) está en `src/domain/catalogo.ts`. Sus ids son deterministas por
   usuario (UUID v5 del nombre + usuario): agregar filas es seguro; **no renombres** las existentes, porque se crearían de nuevo.
+- Importar pasa por `src/domain/importacion.ts`: en Supabase los ids son únicos entre todos los usuarios, así que
+  los registros que no existen en la cuenta reciben un id propio (determinista) y se reescriben las referencias.
+  Si agregas un campo que referencia a otro registro por id, se actualiza solo (se reemplaza cualquier valor igual a un id).
 - Ejecuta `npm test` y `npm run typecheck` antes de hacer commit.

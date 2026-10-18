@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { AreaTexto, CampoTexto, IndicadorGuardado, Seleccion } from '../components/Campos';
+import { tamanoLegible } from '../data/almacenamiento';
 import { useDatos } from '../data/DatosContext';
 import { useAutoguardado } from '../data/useAutoguardado';
 import { fechaLegible } from '../domain/clinica';
@@ -16,10 +17,6 @@ const ETIQUETA_CATEGORIA: Record<Adjunto['categoria'], string> = {
 };
 const OPCIONES_CATEGORIA = CATEGORIAS_ADJUNTO.map((c) => [c, ETIQUETA_CATEGORIA[c]] as const);
 
-export function tamanoLegible(bytes: number): string {
-  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
 
 /** URL temporal (object URL) para mostrar un archivo guardado; se libera al desmontar. */
 export function useArchivoUrl(ruta: string | null): { url: string | null; error: string } {

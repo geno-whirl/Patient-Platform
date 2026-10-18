@@ -1,20 +1,18 @@
-import { useRef, useState } from 'react';
-import { z } from 'zod';
+import { useState } from 'react';
 import { RespaldoDrive } from '../components/RespaldoDrive';
+import { SeccionRespaldo } from '../components/SeccionRespaldo';
 import { useDatos } from '../data/DatosContext';
 import { descargar } from '../domain/archivos';
 import { hoy } from '../domain/factories';
 import { pacienteAMarkdown } from '../domain/markdown';
-import { ExportacionSchema } from '../domain/schema';
 import { OpcionesCentros } from '../components/OpcionesCentros';
 
 export function DatosPage() {
-  const { db, modo, exportar, importar } = useDatos();
+  const { db, modo } = useDatos();
   const [centroId, setCentroId] = useState('');
   const [soloActivos, setSoloActivos] = useState(true);
   const [anonimo, setAnonimo] = useState(true);
   const [mensaje, setMensaje] = useState('');
-  const archivo = useRef<HTMLInputElement>(null);
 
   const seleccion = db.pacientes.filter(
     (p) => (!centroId || p.centroId === centroId) && (!soloActivos || p.estado === 'activo'),
@@ -22,18 +20,6 @@ export function DatosPage() {
   const markdown = () =>
     `# Pacientes de kinesiología (exportado ${hoy()})\n\n` +
     seleccion.map((p) => pacienteAMarkdown(p, db, { anonimo })).join('\n---\n\n');
-
-  const alImportar = async (f: File | undefined) => {
-    if (!f) return;
-    try {
-      const { total } = await importar(JSON.parse(await f.text()));
-      setMensaje(`Importados ${total} registros.`);
-    } catch (e) {
-      setMensaje(`Error al importar: ${e instanceof Error ? e.message : e}`);
-    } finally {
-      if (archivo.current) archivo.current.value = '';
-    }
-  };
 
   return (
     <div className="pila">
@@ -82,32 +68,7 @@ export function DatosPage() {
         </p>
       </section>
 
-      <section className="tarjeta pila">
-        <h3>Respaldo</h3>
-        <p>
-          {modo === 'local'
-            ? 'Estás en modo local: los datos viven solo en este navegador. Descarga respaldos periódicamente.'
-            : 'Tus datos se guardan en la nube (Supabase). Igual puedes descargar un respaldo completo cuando quieras.'}
-        </p>
-        <div className="acciones acciones--izq">
-          <button className="boton boton--primario" onClick={() => descargar(`respaldo-kine-${hoy()}.json`, JSON.stringify(exportar(), null, 2))}>
-            Descargar respaldo (.json)
-          </button>
-          <button className="boton" onClick={() => archivo.current?.click()}>
-            Importar respaldo…
-          </button>
-          <input ref={archivo} type="file" accept="application/json,.json" hidden onChange={(e) => alImportar(e.target.files?.[0])} />
-          <button
-            className="boton"
-            onClick={() =>
-              descargar('esquema-kine.json', JSON.stringify(z.toJSONSchema(ExportacionSchema, { io: 'input' }), null, 2))
-            }
-          >
-            Descargar esquema de datos (JSON Schema)
-          </button>
-        </div>
-        <p className="tenue">Importar agrega o actualiza registros por id; no borra nada.</p>
-      </section>
+      <SeccionRespaldo />
       {modo === 'supabase' && <RespaldoDrive />}
       {mensaje && <p className="aviso">{mensaje}</p>}
     </div>

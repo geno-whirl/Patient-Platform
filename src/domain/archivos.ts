@@ -1,6 +1,7 @@
-/** Descarga un texto como archivo en el navegador. */
-export function descargar(nombre: string, contenido: string, tipo = 'application/json') {
-  const url = URL.createObjectURL(new Blob([contenido], { type: `${tipo};charset=utf-8` }));
+/** Descarga un texto o un archivo binario en el navegador. */
+export function descargar(nombre: string, contenido: string | Blob, tipo = 'application/json') {
+  const blob = typeof contenido === 'string' ? new Blob([contenido], { type: `${tipo};charset=utf-8` }) : contenido;
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = nombre;
