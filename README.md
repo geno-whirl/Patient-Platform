@@ -21,7 +21,7 @@ basada en el formato de ingreso en papel (anamnesis próxima/remota, evaluación
 | **Ficha imprimible / PDF** | Documento de la ficha con secciones a elegir (ingreso, evaluaciones con mapa del dolor, sesiones, adjuntos e imágenes), opcionalmente anonimizado. Se guarda como PDF desde el diálogo de impresión. |
 | **Centros** | Varios lugares de atención con color. Un centro se puede **archivar** (deja de ofrecerse para pacientes nuevos y conserva su historial) o **eliminar**, eligiendo qué hacer con sus pacientes: moverlos a otro centro, dejarlos sin centro o eliminarlos. |
 | **Evolución y agenda** | Gráfico de EVA, próxima sesión e indicaciones vigentes; agenda por centro, más una vista de sesiones pasadas que quedaron sin registrar. |
-| **Datos e IA** | Fichas en Markdown para un LLM (**anonimizadas** por defecto), **respaldo completo .zip con adjuntos** (o solo datos .json) e importación, esquema de datos y **respaldo automático en Google Drive** (con Supabase). |
+| **Datos e IA** | Fichas en Markdown para un LLM (**anonimizadas** por defecto), **respaldo completo .zip con adjuntos** (o solo datos .json) e importación, **carpeta del computador siempre sincronizada**, esquema de datos y **respaldo automático en Google Drive** (con Supabase). |
 
 Todo se guarda solo mientras escribes. Además es una **app instalable (PWA)**: se agrega a la pantalla de inicio del celular, tablet o computador, se abre en su propia ventana y funciona sin conexión.
 
@@ -41,7 +41,7 @@ Navegador (React)  ──►  Supabase
 - **Respaldo en Drive:** corre en el servidor, así que funciona con la app cerrada. Usa el permiso `drive.file`: la app solo ve los archivos que ella misma crea, nunca el resto de tu Drive. Guarda un JSON completo por respaldo (conserva los últimos 30) más una copia de cada adjunto.
 - **Modo local:** sin configurar Supabase, la app guarda todo en el navegador (IndexedDB). Sirve para probarla. Los datos y adjuntos existen solo en ese navegador, así que la app:
   - pide al navegador **almacenamiento persistente**, para que no los borre por falta de espacio;
-  - recuerda descargar un **respaldo completo (.zip)** si nunca se hizo o pasó más de una semana.
+  - recuerda descargar un **respaldo completo (.zip)** si nunca se hizo o pasó más de una semana (salvo que esté activa la sincronización con una carpeta).
 
 ```
 src/domain/       modelo (schema.ts), ficha estructurada, Markdown, anonimización, mapa del dolor
@@ -164,6 +164,7 @@ npm run schema     # regenera docs/esquema.json
 ## Consultar a un LLM sobre tus pacientes
 
 - **Rápido:** en *Datos e IA* descarga las fichas `.md` (anonimizadas por defecto, filtrables por centro) y súbelas a un proyecto de Claude. También puedes usar **“Copiar ficha para IA”** desde un paciente.
+- **Desde una carpeta sincronizada:** `fichas-pacientes.md` y `respaldo.json` están siempre al día en tu computador, así que un asistente con acceso a esa carpeta (Claude Desktop, Claude Code…) puede leerlos directamente. Ojo: ahí las fichas **no** están anonimizadas.
 - **Desde Drive:** los respaldos JSON quedan en tu carpeta “Kine — respaldos”, y un asistente con acceso a tu Drive puede leerlos. El formato está en `docs/esquema.json`.
 - **En vivo:** conecta un agente al servidor MCP de Supabase y consulta con SQL (ver [`AGENTS.md`](AGENTS.md)).
 
@@ -199,6 +200,24 @@ En **Datos e IA → Respaldo**:
   - Desde un `.zip` restaura también los archivos de los adjuntos.
   - Funciona entre modos: un respaldo de modo local se puede importar en una cuenta de Supabase y al revés.
   - El catálogo base no se duplica, y reimportar el mismo respaldo actualiza en vez de duplicar.
+
+## Carpeta sincronizada
+
+En **Datos e IA → Sincronizar con una carpeta del computador** eliges una carpeta y la app la mantiene al día: unos segundos después de cada cambio (y al cambiar de pestaña) reescribe
+
+```
+respaldo.json                      todos los datos (el mismo formato del respaldo .zip)
+fichas-pacientes.md                la ficha de cada paciente en Markdown, sin anonimizar
+adjuntos/<id>/<archivo>            cada adjunto (se copia una vez; se borra si lo eliminas en la app)
+LEEME.txt
+```
+
+- Funciona en **modo local y con Supabase** (en ese caso es una copia local de la nube). Cada cuenta del navegador recuerda su propia carpeta.
+- Si la carpeta está dentro de Google Drive, Dropbox, OneDrive o iCloud Drive en tu computador, además queda respaldada en la nube.
+- Requiere **Chrome o Edge en un computador** (Windows, Mac, Linux o ChromeOS): usa la [File System Access API](https://developer.mozilla.org/docs/Web/API/Window/showDirectoryPicker), que Safari, Firefox y los celulares no tienen. En esos navegadores la opción aparece desactivada con una explicación.
+- Se actualiza solo **mientras la app está abierta**. Al volver a abrirla, el navegador puede pedir confirmar el permiso: aparece **“📁 Reanudar”** en la barra superior (un clic). Si instalas la app (PWA), Chrome ofrece “Permitir siempre”.
+- **Otro computador:** elige la misma carpeta (por ejemplo, sincronizada por Drive) y pulsa **“Restaurar y sincronizar”**: trae lo que la carpeta tenga más nuevo, sin borrar nada de lo que ya hay en la app, y desde ahí la mantiene al día. “Reemplazar” sobrescribe la carpeta con los datos del navegador.
+- No edites los archivos a mano: la app los sobrescribe. No es una sincronización en ambos sentidos entre dos navegadores abiertos a la vez; para eso está el modo Supabase.
 
 ## Aviso de uso
 

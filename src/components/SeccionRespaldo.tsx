@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { diasDesdeRespaldo, estadoAlmacenamiento, registrarRespaldo, solicitarPersistencia, tamanoLegible, type EstadoAlmacenamiento } from '../data/almacenamiento';
 import { useDatos } from '../data/DatosContext';
+import { useSincronizacionCarpeta } from '../data/SincronizacionCarpeta';
 import { descargar } from '../domain/archivos';
 import { hoy } from '../domain/factories';
 import { crearRespaldoZip, esZip, leerRespaldoZip } from '../domain/respaldoZip';
@@ -14,6 +15,7 @@ export function SeccionRespaldo() {
   const [trabajo, setTrabajo] = useState('');
   const [mensaje, setMensaje] = useState<{ tipo: 'ok' | 'error' | 'aviso'; texto: string } | null>(null);
   const [dias, setDias] = useState(() => diasDesdeRespaldo());
+  const { estado: carpeta } = useSincronizacionCarpeta();
 
   const descargarZip = async () => {
     setMensaje(null);
@@ -69,7 +71,10 @@ export function SeccionRespaldo() {
           ? 'Estás en modo local: los datos y los adjuntos viven solo en este navegador. Descarga un respaldo completo periódicamente y guárdalo en un lugar seguro.'
           : 'Tus datos se guardan en la nube (Supabase). Igual puedes descargar un respaldo completo cuando quieras.'}
       </p>
-      {modo === 'local' && (
+      {modo === 'local' && carpeta.tipo === 'activa' && !carpeta.error && (
+        <p className="tenue">Respaldo continuo activo: los datos y adjuntos se copian a la carpeta “{carpeta.carpeta}” (ver abajo).</p>
+      )}
+      {modo === 'local' && (carpeta.tipo !== 'activa' || !!carpeta.error) && (
         <p className={dias == null || dias > 7 ? 'aviso aviso--aviso' : 'tenue'}>
           {dias == null ? 'Aún no has descargado un respaldo completo en este navegador.' : `Último respaldo completo: ${dias === 0 ? 'hoy' : `hace ${dias} día(s)`}.`}
         </p>

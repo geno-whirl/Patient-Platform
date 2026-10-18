@@ -6,6 +6,7 @@ import { useDatos } from '../data/DatosContext';
 /** Repositorio del código. Si publicas una versión modificada, apunta aquí a tu propio código (VITE_URL_CODIGO). */
 const URL_CODIGO = (import.meta.env.VITE_URL_CODIGO as string | undefined) || 'https://github.com/geno-whirl/Patient-Platform';
 import { BotonInstalar, useEnLinea } from './EstadoApp';
+import { InsigniaCarpeta } from './SincronizarCarpeta';
 import { recurso } from '../rutaBase';
 
 export function Marco({ email, onSalir }: { email?: string; onSalir?: () => void }) {
@@ -42,6 +43,7 @@ export function Marco({ email, onSalir }: { email?: string; onSalir?: () => void
         </nav>
         <div className="barra__usuario">
           <BotonInstalar />
+          <InsigniaCarpeta />
           {!enLinea && (
             <span
               className="insignia insignia--aviso"

@@ -335,6 +335,7 @@ a.tarjeta:hover {
   color: var(--aviso);
 }
 .insignia--activo,
+.insignia--ok,
 .insignia--s-realizada {
   background: var(--ok-suave);
   color: var(--ok);
@@ -344,9 +345,17 @@ a.tarjeta:hover {
   color: var(--primario);
 }
 .insignia--s-cancelada,
+.insignia--error,
 .insignia--s-no_asistio {
   background: var(--peligro-suave);
   color: var(--peligro);
+}
+button.insignia--boton {
+  border: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .chips {
@@ -1278,6 +1287,11 @@ a.tarjeta:hover {
   }
   .barra__email {
     display: none;
+  }
+  /* Botones con texto largo: que hagan salto de línea en vez de salirse de la pantalla. */
+  .boton {
+    white-space: normal;
+    text-align: center;
   }
 }
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { RespaldoDrive } from '../components/RespaldoDrive';
 import { SeccionRespaldo } from '../components/SeccionRespaldo';
+import { SincronizarCarpeta } from '../components/SincronizarCarpeta';
 import { useDatos } from '../data/DatosContext';
 import { descargar } from '../domain/archivos';
 import { hoy } from '../domain/factories';
@@ -69,6 +70,7 @@ export function DatosPage() {
       </section>
 
       <SeccionRespaldo />
+      <SincronizarCarpeta />
       {modo === 'supabase' && <RespaldoDrive />}
       {mensaje && <p className="aviso">{mensaje}</p>}
     </div>

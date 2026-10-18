@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Acceso } from './auth/Acceso';
 import { Marco } from './components/Marco';
 import { DatosProvider } from './data/DatosContext';
+import { SincronizacionCarpetaProvider } from './data/SincronizacionCarpeta';
 import { RepositorioLocal } from './data/repositorioLocal';
 import { RepositorioSupabase } from './data/repositorioSupabase';
 import { supabase } from './data/supabase';
@@ -19,36 +20,38 @@ import { PacientesPage } from './pages/PacientesPage';
 import { SesionPage } from './pages/SesionPage';
 import { BASE } from './rutaBase';
 
-function Rutas({ email, onSalir }: { email?: string; onSalir?: () => void }) {
+function Rutas({ ambito, email, onSalir }: { ambito: string; email?: string; onSalir?: () => void }) {
   return (
-    <Routes>
-      <Route element={<Marco email={email} onSalir={onSalir} />}>
-        <Route index element={<PacientesPage />} />
-        <Route path="agenda" element={<AgendaPage />} />
-        <Route path="centros" element={<CentrosPage />} />
-        <Route path="datos" element={<DatosPage />} />
-        <Route path="ejercicios" element={<BibliotecaMarco />}>
-          <Route index element={<ListaBiblioteca />} />
-          <Route path="plantillas" element={<ListaPlantillas />} />
-          <Route path="plantillas/:id" element={<PlantillaPage />} />
-          <Route path="programas" element={<ListaProgramas />} />
-          <Route path="programas/:id" element={<ProgramaPage />} />
+    <SincronizacionCarpetaProvider ambito={ambito}>
+      <Routes>
+        <Route element={<Marco email={email} onSalir={onSalir} />}>
+          <Route index element={<PacientesPage />} />
+          <Route path="agenda" element={<AgendaPage />} />
+          <Route path="centros" element={<CentrosPage />} />
+          <Route path="datos" element={<DatosPage />} />
+          <Route path="ejercicios" element={<BibliotecaMarco />}>
+            <Route index element={<ListaBiblioteca />} />
+            <Route path="plantillas" element={<ListaPlantillas />} />
+            <Route path="plantillas/:id" element={<PlantillaPage />} />
+            <Route path="programas" element={<ListaProgramas />} />
+            <Route path="programas/:id" element={<ProgramaPage />} />
+          </Route>
+          <Route path="pacientes/:pid/imprimir" element={<ImprimirPage />} />
+          <Route path="pacientes/:pid" element={<PacienteMarco />}>
+            <Route index element={<ResumenPaciente />} />
+            <Route path="datos" element={<DatosPacientePage />} />
+            <Route path="ingresos" element={<ListaIngresos />} />
+            <Route path="ingresos/:id" element={<IngresoPage />} />
+            <Route path="evaluaciones" element={<ListaEvaluaciones />} />
+            <Route path="evaluaciones/:id" element={<EvaluacionPage />} />
+            <Route path="sesiones" element={<ListaSesiones />} />
+            <Route path="sesiones/:id" element={<SesionPage />} />
+            <Route path="adjuntos" element={<ListaAdjuntos />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
-        <Route path="pacientes/:pid/imprimir" element={<ImprimirPage />} />
-        <Route path="pacientes/:pid" element={<PacienteMarco />}>
-          <Route index element={<ResumenPaciente />} />
-          <Route path="datos" element={<DatosPacientePage />} />
-          <Route path="ingresos" element={<ListaIngresos />} />
-          <Route path="ingresos/:id" element={<IngresoPage />} />
-          <Route path="evaluaciones" element={<ListaEvaluaciones />} />
-          <Route path="evaluaciones/:id" element={<EvaluacionPage />} />
-          <Route path="sesiones" element={<ListaSesiones />} />
-          <Route path="sesiones/:id" element={<SesionPage />} />
-          <Route path="adjuntos" element={<ListaAdjuntos />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </SincronizacionCarpetaProvider>
   );
 }
 
@@ -57,7 +60,7 @@ function AppConSesion({ userId, email }: { userId: string; email?: string }) {
   return (
     // key: al cambiar de usuario se recargan los datos desde cero.
     <DatosProvider key={userId} repositorio={repositorio}>
-      <Rutas email={email} onSalir={() => supabase!.auth.signOut()} />
+      <Rutas ambito={`supabase:${userId}`} email={email} onSalir={() => supabase!.auth.signOut()} />
     </DatosProvider>
   );
 }
@@ -71,7 +74,7 @@ export function App() {
         <Acceso>{(sesion) => <AppConSesion userId={sesion.user.id} email={sesion.user.email} />}</Acceso>
       ) : (
         <DatosProvider repositorio={local}>
-          <Rutas />
+          <Rutas ambito="local" />
         </DatosProvider>
       )}
     </BrowserRouter>
